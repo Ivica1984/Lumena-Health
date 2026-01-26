@@ -1,6 +1,1341 @@
-<!doctype html><meta charset="utf-8">
-<title>Lumena Health – Test</title>
-<body style="font-family:system-ui;max-width:800px;margin:40px auto">
-  <h1>OK – Build funktioniert ✅</h1>
-  <p><a href="/health">Health-Check</a></p>
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lumena Health – Prototyp (Step 1–4)</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f1a2f;
+      --panel2:#101f3b;
+      --card:#0e1a31;
+      --muted:#94a3b8;
+      --text:#e5e7eb;
+      --accent:#60a5fa;
+      --accent2:#34d399;
+      --warn:#fbbf24;
+      --danger:#fb7185;
+      --ok:#22c55e;
+      --border:rgba(148,163,184,.18);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --radius2:22px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 700px at 10% 10%, rgba(96,165,250,.18), transparent 60%),
+                  radial-gradient(900px 600px at 90% 0%, rgba(52,211,153,.12), transparent 55%),
+                  radial-gradient(900px 700px at 50% 100%, rgba(251,191,36,.10), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit}
+    .app{display:flex; flex-direction:column; min-height:100vh}
+
+    /* Top bar */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter:saturate(140%) blur(14px);
+      background: rgba(11,18,32,.65);
+      border-bottom:1px solid var(--border);
+    }
+    .topbar-inner{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 18px; gap:12px; max-width:1280px; margin:0 auto;
+    }
+    .brand{display:flex; align-items:center; gap:10px}
+    .logo{
+      width:36px; height:36px; border-radius:12px;
+      background: linear-gradient(135deg, rgba(96,165,250,.95), rgba(52,211,153,.85));
+      box-shadow:var(--shadow); position:relative;
+    }
+    .logo:after{
+      content:""; position:absolute; inset:9px; border-radius:10px;
+      background:rgba(11,18,32,.55); border:1px solid rgba(255,255,255,.15);
+    }
+    .brand h1{font-size:14px; margin:0; letter-spacing:.2px}
+    .brand p{margin:0; font-size:12px; color:var(--muted)}
+    .tabs{display:flex; gap:8px; flex-wrap:wrap}
+    .tab{
+      border:1px solid var(--border); background:rgba(15,26,47,.65);
+      padding:8px 10px; border-radius:999px; font-size:12px; color:var(--muted);
+      cursor:pointer; display:flex; gap:8px; align-items:center; transition:.15s ease;
+      user-select:none;
+    }
+    .tab:hover{transform:translateY(-1px); border-color:rgba(96,165,250,.35)}
+    .tab.active{color:var(--text); border-color:rgba(96,165,250,.55); background:rgba(16,31,59,.85)}
+
+    .top-actions{display:flex; gap:10px; align-items:center}
+    .btn{
+      border:1px solid var(--border); background:rgba(16,31,59,.8); color:var(--text);
+      padding:9px 12px; border-radius:12px; font-size:12px; cursor:pointer; transition:.15s ease;
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn:hover{transform:translateY(-1px); border-color:rgba(52,211,153,.35)}
+    .btn.primary{background:linear-gradient(135deg, rgba(96,165,250,.95), rgba(52,211,153,.75)); border-color:transparent}
+    .btn.danger{background:rgba(251,113,133,.12); border-color:rgba(251,113,133,.35)}
+    .pill{font-size:11px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); color:var(--muted); background:rgba(15,26,47,.45)}
+
+    /* Layout */
+    .container{max-width:1280px; margin:0 auto; width:100%; padding:18px}
+    .grid{display:grid; grid-template-columns: 360px 1fr; gap:16px; align-items:start}
+    @media (max-width: 980px){.grid{grid-template-columns:1fr}}
+    .panel{background:rgba(15,26,47,.7); border:1px solid var(--border); border-radius:var(--radius2); box-shadow:var(--shadow); overflow:hidden}
+    .panel-header{padding:14px 14px 12px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
+    .panel-header h2{margin:0; font-size:13px}
+    .panel-header .sub{margin:4px 0 0; font-size:12px; color:var(--muted); line-height:1.35}
+    .panel-body{padding:14px}
+
+    .section-title{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:4px 0 10px}
+
+    /* Inputs */
+    .field{margin:0 0 12px}
+    .field label{display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12px; color:var(--text); margin:0 0 7px}
+    .field label span{color:var(--muted); font-size:11px}
+    .row{display:flex; gap:10px; align-items:center}
+    input[type="text"], input[type="number"], select{
+      width:100%; background:rgba(16,31,59,.65); border:1px solid var(--border); color:var(--text);
+      padding:10px 10px; border-radius:12px; outline:none; font-size:12px;
+    }
+    input[type="range"]{width:100%}
+    .toggle{display:flex; gap:8px; align-items:center; background:rgba(16,31,59,.45); border:1px solid var(--border); padding:9px 10px; border-radius:12px}
+    .toggle input{accent-color: var(--accent)}
+    .toggle .hint{font-size:11px; color:var(--muted)}
+
+    /* Cards */
+    .cards{display:grid; grid-template-columns: repeat(12, 1fr); gap:12px}
+    .card{grid-column: span 6; background:rgba(14,26,49,.75); border:1px solid var(--border); border-radius:var(--radius2); box-shadow:var(--shadow); overflow:hidden; position:relative}
+    .card.full{grid-column: span 12}
+    @media (max-width: 980px){.card{grid-column:span 12}}
+    .card-header{padding:14px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
+    .card-header h3{margin:0; font-size:13px}
+    .card-header p{margin:4px 0 0; font-size:12px; color:var(--muted); line-height:1.35}
+    .badge{font-size:11px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); color:var(--muted); background:rgba(16,31,59,.55); white-space:nowrap}
+    .badge.ok{color:rgba(34,197,94,.95); border-color:rgba(34,197,94,.35); background:rgba(34,197,94,.10)}
+    .badge.warn{color:rgba(251,191,36,.95); border-color:rgba(251,191,36,.35); background:rgba(251,191,36,.10)}
+    .badge.danger{color:rgba(251,113,133,.95); border-color:rgba(251,113,133,.35); background:rgba(251,113,133,.10)}
+    .card-body{padding:14px}
+
+    /* Alert box */
+    .alert{border-radius:14px; border:1px solid var(--border); background:rgba(16,31,59,.55); padding:12px 12px; display:flex; gap:10px; align-items:flex-start; margin:0 0 12px}
+    .dot{width:10px; height:10px; border-radius:999px; margin-top:4px; flex:0 0 auto}
+    .dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.danger{background:var(--danger)}
+    .alert .title{font-weight:600; font-size:12px; margin:0}
+    .alert .desc{font-size:12px; margin:4px 0 0; color:var(--muted); line-height:1.45}
+
+    /* Tables */
+    table{width:100%; border-collapse:separate; border-spacing:0 8px}
+    td,th{font-size:12px}
+    th{color:var(--muted); font-weight:500; text-align:left; padding:0 10px 6px}
+    .trow{background:rgba(16,31,59,.55); border:1px solid var(--border); border-radius:14px}
+    .trow td{padding:10px}
+    .trow td:first-child{border-top-left-radius:14px; border-bottom-left-radius:14px}
+    .trow td:last-child{border-top-right-radius:14px; border-bottom-right-radius:14px}
+
+    .value{font-family:var(--mono); font-size:12px}
+    .flag{font-weight:600}
+    .flag.ok{color:rgba(34,197,94,.95)}
+    .flag.warn{color:rgba(251,191,36,.95)}
+    .flag.danger{color:rgba(251,113,133,.95)}
+    .mini{font-size:11px; color:var(--muted); margin-top:4px; line-height:1.35}
+    .chip{display:inline-flex; align-items:center; gap:6px; font-size:11px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:rgba(15,26,47,.35); color:var(--muted); margin:4px 6px 0 0}
+
+    .pricing-grid{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
+    .price-card{grid-column:span 4}
+    @media (max-width: 1100px){.price-card{grid-column:span 6}}
+    @media (max-width: 980px){.price-card{grid-column:span 12}}
+
+    .price-card .card-body{display:flex; flex-direction:column; gap:10px}
+    .price{font-size:22px; font-weight:700; letter-spacing:.2px}
+
+    .divider{height:1px; background:var(--border); margin:12px 0}
+    .split{display:grid; grid-template-columns:1.1fr .9fr; gap:12px}
+    @media (max-width: 980px){.split{grid-template-columns:1fr}}
+
+    /* Doctor dashboard */
+    .kpi{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
+    .kpi .k{grid-column:span 4}
+    @media (max-width: 980px){.kpi .k{grid-column:span 12}}
+    .k .big{font-size:22px; font-weight:800}
+    .k .label{font-size:12px; color:var(--muted)}
+
+    .list{display:flex; flex-direction:column; gap:10px}
+    .item{background:rgba(16,31,59,.55); border:1px solid var(--border); border-radius:16px; padding:12px; display:flex; justify-content:space-between; gap:10px; align-items:flex-start; cursor:pointer; transition:.15s ease}
+    .item:hover{transform:translateY(-1px); border-color:rgba(96,165,250,.35)}
+    .item .meta{font-size:11px; color:var(--muted); margin-top:3px}
+    .footnote{font-size:11px; color:var(--muted); line-height:1.45}
+
+    .view{display:none}
+    .view.active{display:block}
+
+    .toast{position:fixed; right:16px; bottom:16px; background:rgba(15,26,47,.85); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); padding:12px; width:min(420px, calc(100vw - 32px)); display:none; z-index:100}
+    .toast.show{display:block}
+    .toast .t{font-weight:700; font-size:12px; margin:0}
+    .toast .d{font-size:12px; color:var(--muted); margin:6px 0 0; line-height:1.45}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Lumena Health</h1>
+          <p>Ad-hoc Heimblutentnahme • Laboranalyse • KI-Assistenz • Kunden-Dashboard</p>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Steps">
+        <div class="tab active" data-view="step12" role="tab" aria-selected="true">Step 1–2 <span class="pill">Präanalytik + KI</span></div>
+        <div class="tab" data-view="step3" role="tab" aria-selected="false">Step 3 <span class="pill">Module & Checkout</span></div>
+        <div class="tab" data-view="step4" role="tab" aria-selected="false">Step 4 <span class="pill">Kunden-Dashboard</span></div>
+      </div>
+
+      <div class="top-actions">
+        <span class="pill" id="statusPill">Demo bereit</span>
+        <button class="btn" id="resetBtn" title="Zurücksetzen">↺ Reset</button>
+        <button class="btn primary" id="demoBtn" title="Demo-Daten laden">⚡ Demo laden</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- VIEW: STEP 1–2 -->
+    <div class="view active" id="view-step12">
+      <div class="grid">
+
+        <!-- Left Panel: Preanalytics -->
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Präanalytik-Check</h2>
+              <p class="sub">Angaben vor der Blutentnahme. Das System markiert Werte, die durch Faktoren verfälscht sein können.</p>
+            </div>
+            <span class="badge" id="preBadge">Status: —</span>
+          </div>
+          <div class="panel-body">
+
+            <div class="section-title">Nüchtern</div>
+            <div class="field">
+              <label>Nüchtern? <span>für Glukose/Insulin/Lipide</span></label>
+              <div class="toggle">
+                <input type="checkbox" id="fasting" />
+                <div>
+                  <div style="font-size:12px; font-weight:600">Ja, nüchtern</div>
+                  <div class="hint">Wenn nein: Stunden seit letzter Mahlzeit angeben</div>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Stunden seit letzter Mahlzeit <span>(wenn nicht nüchtern)</span></label>
+              <input type="number" id="hoursSinceMeal" min="0" max="24" value="0" />
+            </div>
+
+            <div class="section-title">Getränke & Substanzen</div>
+            <div class="field">
+              <label>Kaffee / gesüsste Getränke <span>letzte 6h</span></label>
+              <select id="coffee">
+                <option value="no">Nein</option>
+                <option value="coffee">Kaffee (schwarz)</option>
+                <option value="sweet">Gesüsstes Getränk</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Alkohol <span>letzte 24h</span></label>
+              <select id="alcohol">
+                <option value="no">Nein</option>
+                <option value="yes">Ja</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Supplements / Biotin <span>letzte 48h</span></label>
+              <select id="biotin">
+                <option value="no">Nein</option>
+                <option value="yes">Ja (inkl. Biotin)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Intensiver Sport <span>letzte 24h</span></label>
+              <select id="sport">
+                <option value="no">Nein</option>
+                <option value="yes">Ja</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Raucherstatus <span>für CEA</span></label>
+              <select id="smoke">
+                <option value="no">Nicht-Raucher</option>
+                <option value="yes">Raucher</option>
+              </select>
+            </div>
+
+            <div class="divider"></div>
+            <div class="footnote">Hinweis: Präanalytik-Hinweise sind **Assistenz**. Bei Unsicherheit wird eine Wiederholung oder ärztliche Rücksprache empfohlen.</div>
+
+          </div>
+        </div>
+
+        <!-- Right Panel: Modules & AI summary (Step 1–2) -->
+        <div>
+          <div class="card full">
+            <div class="card-header">
+              <div>
+                <h3>Präanalytik-Warnbox (gesamt)</h3>
+                <p>Automatisch aus den Angaben abgeleitet. Betroffene Werte werden im Modul zusätzlich markiert.</p>
+              </div>
+              <span class="badge" id="preSummaryBadge">—</span>
+            </div>
+            <div class="card-body" id="preAlertArea"></div>
+          </div>
+
+          <div class="cards">
+            <div class="card" data-module="metabolic">
+              <div class="card-header">
+                <div>
+                  <h3>❤️ Stoffwechsel</h3>
+                  <p>KI-Assistenz: Screening auf Dysglykämie & metabolisches Risiko (ohne Diagnose).</p>
+                </div>
+                <span class="badge" id="badge-metabolic">—</span>
+              </div>
+              <div class="card-body">
+                <table>
+                  <thead><tr><th>Wert</th><th>Resultat</th><th>Referenz</th><th>Status</th></tr></thead>
+                  <tbody id="tbl-metabolic"></tbody>
+                </table>
+                <div class="alert" id="ai-metabolic"></div>
+              </div>
+            </div>
+
+            <div class="card" data-module="lipids">
+              <div class="card-header">
+                <div>
+                  <h3>🫀 Lipide</h3>
+                  <p>KI-Assistenz: Atherosklerose-Risiko, Therapieverlauf, Lifestyle-Impact.</p>
+                </div>
+                <span class="badge" id="badge-lipids">—</span>
+              </div>
+              <div class="card-body">
+                <table>
+                  <thead><tr><th>Wert</th><th>Resultat</th><th>Referenz</th><th>Status</th></tr></thead>
+                  <tbody id="tbl-lipids"></tbody>
+                </table>
+                <div class="alert" id="ai-lipids"></div>
+              </div>
+            </div>
+
+            <div class="card" data-module="cbc">
+              <div class="card-header">
+                <div>
+                  <h3>🩸 Blutbild</h3>
+                  <p>KI-Assistenz: Anämie-/Entzündungs-Hinweise, Verlauf & Kontext (ohne Diagnose).</p>
+                </div>
+                <span class="badge" id="badge-cbc">—</span>
+              </div>
+              <div class="card-body">
+                <table>
+                  <thead><tr><th>Wert</th><th>Resultat</th><th>Referenz</th><th>Status</th></tr></thead>
+                  <tbody id="tbl-cbc"></tbody>
+                </table>
+                <div class="alert" id="ai-cbc"></div>
+              </div>
+            </div>
+
+            <div class="card" data-module="kidney">
+              <div class="card-header">
+                <div>
+                  <h3>🧴 Niere</h3>
+                  <p>KI-Assistenz: Filtration (eGFR/Kreatinin), Hydratation, Verlauf.</p>
+                </div>
+                <span class="badge" id="badge-kidney">—</span>
+              </div>
+              <div class="card-body">
+                <table>
+                  <thead><tr><th>Wert</th><th>Resultat</th><th>Referenz</th><th>Status</th></tr></thead>
+                  <tbody id="tbl-kidney"></tbody>
+                </table>
+                <div class="alert" id="ai-kidney"></div>
+              </div>
+            </div>
+
+            <div class="card" data-module="electrolytes">
+              <div class="card-header">
+                <div>
+                  <h3>⚡ Elektrolyte</h3>
+                  <p>KI-Assistenz: Flüssigkeit/Ernährung/Medikation als Kontext (ohne Diagnose).</p>
+                </div>
+                <span class="badge" id="badge-electrolytes">—</span>
+              </div>
+              <div class="card-body">
+                <table>
+                  <thead><tr><th>Wert</th><th>Resultat</th><th>Referenz</th><th>Status</th></tr></thead>
+                  <tbody id="tbl-electrolytes"></tbody>
+                </table>
+                <div class="alert" id="ai-electrolytes"></div>
+              </div>
+            </div>
+
+            <div class="card" data-module="thyroid">
+              <div class="card-header">
+                <div>
+                  <h3>🧠 Schilddrüse</h3>
+                  <p>KI-Assistenz: Abklärung bei Müdigkeit, Gewicht, Kälte-/Wärmeintoleranz.</p>
+                </div>
+                <span class="badge" id="badge-thyroid">—</span>
+              </div>
+              <div class="card-body">
+                <table>
+                  <thead><tr><th>Wert</th><th>Resultat</th><th>Referenz</th><th>Status</th></tr></thead>
+                  <tbody id="tbl-thyroid"></tbody>
+                </table>
+                <div class="alert" id="ai-thyroid"></div>
+              </div>
+            </div>
+
+            <div class="card" data-module="micronutrients">
+              <div class="card-header">
+                <div>
+                  <h3>🥦 Mikronährstoffe</h3>
+                  <p>KI-Assistenz: Eisenstatus, Vitamin D/B12 – Energie/Immunsystem/Verlauf.</p>
+                </div>
+                <span class="badge" id="badge-micronutrients">—</span>
+              </div>
+              <div class="card-body">
+                <table>
+                  <thead><tr><th>Wert</th><th>Resultat</th><th>Referenz</th><th>Status</th></tr></thead>
+                  <tbody id="tbl-micronutrients"></tbody>
+                </table>
+                <div class="alert" id="ai-micronutrients"></div>
+              </div>
+            </div>
+
+            <div class="card" data-module="hormones">
+              <div class="card-header">
+                <div>
+                  <h3>🧠 Hormone & Stress</h3>
+                  <p>KI-Assistenz: Stress-/Sexhormone im Kontext (ohne Diagnose).</p>
+                </div>
+                <span class="badge" id="badge-hormones">—</span>
+              </div>
+              <div class="card-body">
+                <table>
+                  <thead><tr><th>Wert</th><th>Resultat</th><th>Referenz</th><th>Status</th></tr></thead>
+                  <tbody id="tbl-hormones"></tbody>
+                </table>
+                <div class="alert" id="ai-hormones"></div>
+              </div>
+            </div>
+
+            <div class="card" data-module="liver">
+              <div class="card-header">
+                <div>
+                  <h3>🧪 Leber & Entzündung</h3>
+                  <p>KI-Assistenz: Leberzellstress, Alkohol-/Medikament-Einfluss, systemische Entzündung.</p>
+                </div>
+                <span class="badge" id="badge-liver">—</span>
+              </div>
+              <div class="card-body">
+                <table>
+                  <thead><tr><th>Wert</th><th>Resultat</th><th>Referenz</th><th>Status</th></tr></thead>
+                <tbody id="tbl-liver"></tbody>
+                </table>
+                <div class="alert" id="ai-liver"></div>
+              </div>
+            </div>
+
+            <div class="card" data-module="muscle">
+              <div class="card-header">
+                <div>
+                  <h3>💪 Muskel / Belastung</h3>
+                  <p>KI-Assistenz: CK/Troponin im Kontext von Sport/Trauma.</p>
+                </div>
+                <span class="badge" id="badge-muscle">—</span>
+              </div>
+              <div class="card-body">
+                <table>
+                  <thead><tr><th>Wert</th><th>Resultat</th><th>Referenz</th><th>Status</th></tr></thead>
+                  <tbody id="tbl-muscle"></tbody>
+                </table>
+                <div class="alert" id="ai-muscle"></div>
+              </div>
+            </div>
+
+            <div class="card" data-module="tumor">
+              <div class="card-header">
+                <div>
+                  <h3>🧬 Marker / CEA</h3>
+                  <p>KI-Assistenz: Kontext zu CEA (Raucherstatus; nicht als Screening allein).</p>
+                </div>
+                <span class="badge" id="badge-tumor">—</span>
+              </div>
+              <div class="card-body">
+                <table>
+                  <thead><tr><th>Wert</th><th>Resultat</th><th>Referenz</th><th>Status</th></tr></thead>
+                  <tbody id="tbl-tumor"></tbody>
+                </table>
+                <div class="alert" id="ai-tumor"></div>
+              </div>
+            </div>
+
+            <div class="card" data-module="inflammation">
+              <div class="card-header">
+                <div>
+                  <h3>🔥 Entzündung</h3>
+                  <p>KI-Assistenz: Entzündungsmarker im Verlauf (ohne Diagnose).</p>
+                </div>
+                <span class="badge" id="badge-inflammation">—</span>
+              </div>
+              <div class="card-body">
+                <table>
+                  <thead><tr><th>Wert</th><th>Resultat</th><th>Referenz</th><th>Status</th></tr></thead>
+                  <tbody id="tbl-inflammation"></tbody>
+                </table>
+                <div class="alert" id="ai-inflammation"></div>
+              </div>
+            </div>
+
+          </div>
+
+          <div style="margin-top:14px" class="footnote">
+            **Wichtiger Hinweis:** Dieses Demo-UI stellt keine Diagnose. Es unterstützt bei Interpretation, Präanalytik-Qualität und sinnvollen Next Steps.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: STEP 3 -->
+    <div class="view" id="view-step3">
+      <div class="cards">
+        <div class="card full">
+          <div class="card-header">
+            <div>
+              <h3>Step 3 – Module, Preise & Checkout-Logik</h3>
+              <p>Produktisierung: Kombinierbare Module + Add-ons. Checkout prüft Präanalytik und macht sinnvolle Ergänzungsvorschläge (Assistenz, kein Upsell-Druck).</p>
+            </div>
+            <span class="badge" id="checkoutBadge">Warenkorb: 0 Module</span>
+          </div>
+          <div class="card-body split">
+            <div class="card" style="margin-bottom:12px">
+              <div class="card-header">
+                <div>
+                  <h3>🏠 Hausbesuch planen</h3>
+                  <p>Servicegebiet (V5): Zürich, Basel, Bern. Empfehlung passender Zeitfenster (morgens für nüchtern/Hormone).</p>
+                </div>
+                <span class="badge" id="visitFeeBadge">CHF —</span>
+              </div>
+              <div class="card-body">
+                <div class="field">
+                  <label>Stadt <span>Servicegebiet</span></label>
+                  <select id="visitCity">
+                    <option value="Zuerich">Zürich</option>
+                    <option value="Basel">Basel</option>
+                    <option value="Bern">Bern</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>PLZ <span>Coverage Check (Demo)</span></label>
+                  <input id="visitPLZ" type="text" inputmode="numeric" placeholder="z. B. 8000" maxlength="4" />
+                  <div class="hint" id="visitPLZHint" style="margin-top:6px">—</div>
+                </div>
+                <div class="field">
+                  <label>Terminfenster <span>Hausbesuch</span></label>
+                  <select id="visitSlot"></select>
+                  <div class="hint" id="visitSlotHint" style="margin-top:6px">—</div>
+                </div>
+                <div class="divider"></div>
+                <div class="mini" id="visitPrepMini">Vorbereitung: Bitte Präanalytik in Step 1–2 ausfüllen.</div>
+              </div>
+            </div>
+
+            <div>
+              <div class="section-title">Module auswählen</div>
+              <div class="pricing-grid" id="moduleGrid"></div>
+
+              <div class="divider"></div>
+
+              <div class="section-title">Add-ons</div>
+              <div class="cards" style="grid-template-columns: repeat(12, 1fr); gap:12px">
+                <div class="card" style="grid-column: span 6">
+                  <div class="card-header">
+                    <div>
+                      <h3>🚀 Express-Auswertung</h3>
+                      <p>Priorisierte Verarbeitung (Demo).</p>
+                    </div>
+                    <span class="badge">+ CHF <span id="priceExpress">19</span></span>
+                  </div>
+                  <div class="card-body">
+                    <div class="toggle">
+                      <input type="checkbox" id="addonExpress" />
+                      <div>
+                        <div style="font-size:12px; font-weight:600">Express aktivieren</div>
+                        <div class="hint">Bei hoher Qualitätswarnung wird Express deaktiviert.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card" style="grid-column: span 6">
+                  <div class="card-header">
+                    <div>
+                      <h3>🩺 Medizinische Einordnung (optional)</h3>
+                      <p>Kurzkommentar oder kurzer Call.</p>
+                    </div>
+                    <span class="badge">ab CHF 29</span>
+                  </div>
+                  <div class="card-body">
+                    <div class="field">
+                      <label>Wähle Option <span>optional</span></label>
+                      <select id="addonDoctor">
+                        <option value="none">Keine</option>
+                        <option value="comment">Kurzkommentar (+29)</option>
+                        <option value="call">15-min Call (+49)</option>
+                      </select>
+                    </div>
+                    <div class="footnote">Assistenz, keine Notfallversorgung.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="section-title">KI-Checkout-Assistenz</div>
+              <div id="checkoutAssist"></div>
+            </div>
+
+            <div>
+              <div class="section-title">Warenkorb & Checkout</div>
+              <div class="alert" id="cartAlert"></div>
+
+              <div class="card" style="border-radius:18px; margin-bottom:12px">
+                <div class="card-header">
+                  <div>
+                    <h3>Zusammenfassung</h3>
+                    <p>Module, Add-ons, Präanalytik-Status, Gesamtpreis.</p>
+                  </div>
+                  <span class="badge" id="totalBadge">CHF 0</span>
+                </div>
+                <div class="card-body">
+                  <div id="cartLines" class="list"></div>
+                  <div class="divider"></div>
+                  <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:12px">
+                    <div>
+                      <div style="font-size:12px; color:var(--muted)">Gesamt</div>
+                      <div class="price" id="totalPrice">CHF 0</div>
+                      <div class="mini" id="totalMini">inkl. Laboranalyse & KI-Assistenz</div>
+                    </div>
+                    <button class="btn primary" id="payBtn">✅ Checkout simulieren</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="footnote">
+                Checkout-Logik (Demo): Hinweise berücksichtigen; Express nur wenn Qualität ok.
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: STEP 4 -->
+    <div class="view" id="view-step4">
+      <div class="cards">
+        <div class="card full">
+          <div class="card-header">
+            <div>
+              <h3>Step 4 – Kunden-Dashboard (Ergebnisse, Verlauf, Next Steps)</h3>
+              <p>Resultate, Präanalytik-Kontext, KI-Zusammenfassung, Verlauf & nächste Schritte (ohne Diagnose).</p>
+            </div>
+            <span class="badge">My Health</span>
+          </div>
+          <div class="card-body">
+
+            <div class="card" style="margin-bottom:12px">
+              <div class="card-header">
+                <div>
+                  <h3>📅 Mein Hausbesuch</h3>
+                  <p>Status & Vorbereitung für die Blutentnahme zu Hause.</p>
+                </div>
+                <span class="badge" id="visitStatusBadge">—</span>
+              </div>
+              <div class="card-body">
+                <div style="display:flex; flex-wrap:wrap; gap:8px" id="visitJourney"></div>
+                <div class="mini" id="visitMeta" style="margin-top:10px">—</div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px">
+                  <button class="btn secondary" id="visitToggleEnroute">🚗 Unterwegs</button>
+                  <button class="btn secondary" id="visitToggleDrawn">🩸 Abgenommen</button>
+                  <button class="btn secondary" id="visitToggleLab">🧪 Im Labor</button>
+                  <button class="btn" id="visitToggleReady">📈 Ergebnis bereit</button>
+                  <button class="btn" id="visitToggleReset">↩︎ Reset</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="kpi" style="margin-bottom:12px">
+              <div class="card k"><div class="card-body"><div class="big" id="kpiLast">—</div><div class="label">Letzte Auswertung</div></div></div>
+              <div class="card k"><div class="card-body"><div class="big" id="kpiStatus">—</div><div class="label">Gesamtstatus</div></div></div>
+              <div class="card k"><div class="card-body"><div class="big" id="kpiNext">—</div><div class="label">Empfohlener nächster Check</div></div></div>
+            </div>
+
+            <div class="split">
+              <div>
+                <div class="section-title">Meine Tests</div>
+                <div class="list" id="custTimeline"></div>
+
+                <div class="divider"></div>
+
+                <div class="section-title">Aktionen</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap">
+                  <button class="btn" id="btnDownload">⬇️ Bericht (PDF) herunterladen</button>
+                  <button class="btn" id="btnCompare">📈 Verlauf vergleichen</button>
+                  <button class="btn primary" id="btnRepeat">🔁 Repeat planen</button>
+                </div>
+                <div class="mini" id="custActionHint" style="margin-top:10px">—</div>
+
+                <div class="divider"></div>
+                <div class="footnote">
+                  Hinweis: Das Dashboard liefert **Assistenz** und Kontext. Bei starken Beschwerden oder Notfallzeichen bitte umgehend medizinische Hilfe suchen.
+                </div>
+              </div>
+
+              <div>
+                <div class="section-title">Auswertung</div>
+                <div class="card" style="margin-bottom:12px">
+                  <div class="card-header">
+                    <div>
+                      <h3 id="reportTitle">Test auswählen</h3>
+                      <p id="reportMeta">—</p>
+                    </div>
+                    <span class="badge" id="reportBadge">—</span>
+                  </div>
+                  <div class="card-body">
+                    <div id="reportPre"></div>
+                    <div class="divider"></div>
+                    <div class="alert" id="reportAI"></div>
+                  </div>
+                </div>
+
+                <div class="card" style="margin-bottom:12px">
+                  <div class="card-header">
+                    <div>
+                      <h3>📌 Fokuswerte (Verlauf)</h3>
+                      <p>Trend (Demo). Für Details siehe Module in Step 1–2.</p>
+                    </div>
+                    <span class="badge">Trends</span>
+                  </div>
+                  <div class="card-body">
+                    <div id="trendGrid" style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px"></div>
+                    <div class="mini" style="margin-top:10px" id="trendHint">—</div>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="card-header">
+                    <div>
+                      <h3>🧭 Nächste Schritte</h3>
+                      <p>Kontextbasierte Empfehlungen – ohne Diagnose.</p>
+                    </div>
+                    <span class="badge">Assistenz</span>
+                  </div>
+                  <div class="card-body">
+                    <div class="list" id="nextSteps"></div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <p class="t" id="toastT">—</p>
+  <p class="d" id="toastD">—</p>
+</div>
+
+<script>
+  // ---------------------------
+  // Demo-Daten
+  // ---------------------------
+  const labs = {
+    metabolic: [
+      { key:"Glukose", unit:"mmol/L", value:5.2, ref:"3.9–5.5", low:3.9, high:5.5, pre:"fasting" },
+      { key:"Insulin", unit:"mIU/L", value:10, ref:"2–25", low:2, high:25, pre:"fasting" },
+      { key:"HOMA-IR (berechnet)", unit:"—", value:2.31, ref:"< 2.0", low:0, high:2.0, pre:"fasting" },
+      { key:"C-Peptid", unit:"nmol/L", value:0.72, ref:"0.30–1.30", low:0.30, high:1.30, pre:"fasting" },
+      { key:"HbA1c", unit:"%", value:5.4, ref:"4.0–5.6", low:4.0, high:5.6, pre:null }
+    ],
+    lipids: [
+      { key:"Cholesterin gesamt", unit:"mmol/L", value:5.3, ref:"< 5.2", low:0, high:5.2, pre:"fasting" },
+      { key:"LDL", unit:"mmol/L", value:3.1, ref:"< 3.0", low:0, high:3.0, pre:"fasting" },
+      { key:"HDL", unit:"mmol/L", value:1.3, ref:"> 1.0", low:1.0, high:99, pre:"fasting" },
+      { key:"Triglyceride", unit:"mmol/L", value:1.9, ref:"< 1.7", low:0, high:1.7, pre:"fasting" },
+      { key:"ApoB", unit:"g/L", value:0.98, ref:"< 1.00", low:0, high:1.00, pre:"fasting" },
+      { key:"Lp(a)", unit:"nmol/L", value:78, ref:"< 75", low:0, high:75, pre:null }
+    ],
+    cbc: [
+      { key:"Hämoglobin", unit:"g/L", value:138, ref:"120–160", low:120, high:160, pre:null },
+      { key:"Hämatokrit", unit:"L/L", value:0.41, ref:"0.36–0.46", low:0.36, high:0.46, pre:null },
+      { key:"MCV", unit:"fL", value:90, ref:"80–96", low:80, high:96, pre:null },
+      { key:"Leukozyten", unit:"G/L", value:6.2, ref:"4.0–10.0", low:4.0, high:10.0, pre:null },
+      { key:"Thrombozyten", unit:"G/L", value:245, ref:"150–400", low:150, high:400, pre:null }
+    ],
+    kidney: [
+      { key:"Kreatinin", unit:"µmol/L", value:88, ref:"62–106", low:62, high:106, pre:null },
+      { key:"eGFR (CKD-EPI)", unit:"mL/min/1.73m²", value:96, ref:"> 90", low:90, high:999, pre:null },
+      { key:"Cystatin C", unit:"mg/L", value:0.88, ref:"0.60–1.00", low:0.60, high:1.00, pre:null },
+      { key:"Harnstoff", unit:"mmol/L", value:6.4, ref:"2.8–7.2", low:2.8, high:7.2, pre:null },
+      { key:"Harnsäure", unit:"µmol/L", value:390, ref:"150–420", low:150, high:420, pre:null }
+    ],
+    electrolytes: [
+      { key:"Natrium", unit:"mmol/L", value:140, ref:"135–145", low:135, high:145, pre:null },
+      { key:"Kalium", unit:"mmol/L", value:4.2, ref:"3.5–5.1", low:3.5, high:5.1, pre:null },
+      { key:"Chlorid", unit:"mmol/L", value:103, ref:"98–107", low:98, high:107, pre:null },
+      { key:"Calcium", unit:"mmol/L", value:2.32, ref:"2.15–2.55", low:2.15, high:2.55, pre:null },
+      { key:"Phosphat", unit:"mmol/L", value:1.12, ref:"0.80–1.50", low:0.80, high:1.50, pre:null },
+      { key:"Magnesium", unit:"mmol/L", value:0.78, ref:"0.70–1.05", low:0.70, high:1.05, pre:null }
+    ],
+    thyroid: [
+      { key:"TSH", unit:"mIU/L", value:2.2, ref:"0.4–4.0", low:0.4, high:4.0, pre:"biotin" },
+      { key:"fT4", unit:"pmol/L", value:14, ref:"12–22", low:12, high:22, pre:"biotin" },
+      { key:"fT3", unit:"pmol/L", value:5.2, ref:"3.1–6.8", low:3.1, high:6.8, pre:"biotin" },
+      { key:"TPO-AK", unit:"kIU/L", value:55, ref:"< 35", low:0, high:35, pre:"biotin" },
+      { key:"Tg-AK", unit:"kIU/L", value:22, ref:"< 115", low:0, high:115, pre:"biotin" }
+    ],
+    hormones: [
+      { key:"Cortisol (8–10 Uhr)", unit:"nmol/L", value:410, ref:"170–540", low:170, high:540, pre:"coffee" },
+      { key:"Testosteron gesamt", unit:"nmol/L", value:16.5, ref:"8–30", low:8, high:30, pre:null },
+      { key:"SHBG", unit:"nmol/L", value:36, ref:"18–54", low:18, high:54, pre:null }
+    ],
+    liver: [
+      { key:"ALT (GPT)", unit:"U/L", value:42, ref:"< 41", low:0, high:41, pre:"alcohol" },
+      { key:"AST (GOT)", unit:"U/L", value:32, ref:"< 35", low:0, high:35, pre:"alcohol" },
+      { key:"GGT", unit:"U/L", value:70, ref:"< 60", low:0, high:60, pre:"alcohol" },
+      { key:"ALP", unit:"U/L", value:92, ref:"35–105", low:35, high:105, pre:null },
+      { key:"Bilirubin gesamt", unit:"µmol/L", value:17, ref:"< 21", low:0, high:21, pre:null },
+      { key:"Albumin", unit:"g/L", value:44, ref:"35–50", low:35, high:50, pre:null },
+      { key:"INR", unit:"—", value:1.0, ref:"0.8–1.2", low:0.8, high:1.2, pre:null }
+    ],
+    inflammation: [
+      { key:"hs-CRP", unit:"mg/L", value:1.2, ref:"< 3", low:0, high:3, pre:"sport" },
+      { key:"BSG", unit:"mm/h", value:12, ref:"< 20", low:0, high:20, pre:null },
+      { key:"Fibrinogen", unit:"g/L", value:3.6, ref:"2.0–4.0", low:2.0, high:4.0, pre:"sport" }
+    ],
+    micronutrients: [
+      { key:"Ferritin", unit:"µg/L", value:42, ref:"30–300", low:30, high:300, pre:null },
+      { key:"Eisen", unit:"µmol/L", value:12, ref:"9–30", low:9, high:30, pre:"fasting" },
+      { key:"Transferrin", unit:"g/L", value:3.1, ref:"2.0–3.6", low:2.0, high:3.6, pre:null },
+      { key:"Transferrin-Sättigung", unit:"%", value:18, ref:"20–50", low:20, high:50, pre:"fasting" },
+      { key:"Vitamin D (25-OH)", unit:"nmol/L", value:58, ref:"> 75", low:75, high:999, pre:null },
+      { key:"Vitamin B12", unit:"pmol/L", value:260, ref:"145–569", low:145, high:569, pre:"biotin" },
+      { key:"Folat", unit:"nmol/L", value:13, ref:"> 10", low:10, high:999, pre:null },
+      { key:"Vitamin B6 (PLP)", unit:"nmol/L", value:45, ref:"20–125", low:20, high:125, pre:"fasting" },
+      { key:"Zink", unit:"µmol/L", value:11, ref:"10–18", low:10, high:18, pre:"fasting" },
+      { key:"Selen", unit:"µg/L", value:82, ref:"70–130", low:70, high:130, pre:"fasting" },
+      { key:"Homocystein", unit:"µmol/L", value:13.2, ref:"< 12", low:0, high:12, pre:"fasting" },
+      { key:"Omega-3 Index (Demo)", unit:"%", value:4.2, ref:"> 8", low:8, high:999, pre:null }
+    ],
+    muscle: [
+      { key:"CK", unit:"U/L", value:320, ref:"< 190", low:0, high:190, pre:"sport" },
+      { key:"Troponin", unit:"ng/L", value:7, ref:"< 14", low:0, high:14, pre:"sport" }
+    ],
+    tumor: [
+      { key:"CEA", unit:"µg/L", value:3.8, ref:"< 3.0", low:0, high:3.0, pre:"smoke" }
+    ]
+  };
+
+  const moduleCatalog = [
+    { id:"base", name:"🩸 Basis-Check", price:59, desc:"Glukose, CRP, Leber/Niere + Überblick.", chips:["Überblick","Entzündung","Leber/Niere"] },
+    { id:"cbc", name:"🧾 Blutbild (BB)", price:49, desc:"Hämoglobin/Leukozyten/Thrombozyten.", chips:["Anämie-Hinweise","Entzündung","Basics"] },
+    { id:"cardio", name:"❤️ Herz & Stoffwechsel", price:79, desc:"Stoffwechsel + Lipide.", chips:["Prävention","Risiko","Lifestyle"], requiresFastingHint:true },
+    { id:"lipidplus", name:"🫀 Lipide Advanced", price:89, desc:"ApoB + Lp(a).", chips:["ApoB","Lp(a)","Risikoprofil"], requiresFastingHint:true },
+    { id:"liverplus", name:"🧪 Leber komplett", price:69, desc:"ALT/AST/GGT/ALP/Bilirubin.", chips:["Leber","Verlauf","Lifestyle"], preSensitive:["alcohol"] },
+    { id:"kidney", name:"🧊 Niere & Elektrolyte", price:69, desc:"Kreatinin/eGFR, Na/K/Ca/Mg.", chips:["Niere","Elektrolyte","Hydration"] },
+    { id:"hormone", name:"🧠 Schilddrüse & Hormone", price:89, desc:"TSH/fT3/fT4 + Cortisol/Testosteron.", chips:["Energie","Stress","Hormone"], preSensitive:["biotin","coffee"] },
+    { id:"micros", name:"🥗 Mikronährstoffe", price:79, desc:"Ferritin/Eisen, Vit D/B12/Folat, Zink/Selen, Homocystein.", chips:["Energie","Immunsystem","Regeneration"], preSensitive:["fasting","biotin"] },
+    { id:"performance", name:"💪 Performance", price:79, desc:"Belastungsmarker (CK/Troponin).", chips:["Sport","Regeneration","Belastung"], preSensitive:["sport"] },
+    { id:"inflammation", name:"🔥 Entzündung", price:59, desc:"hs-CRP, BSG, Fibrinogen.", chips:["Entzündung","Verlauf","Kontext"], preSensitive:["sport"] },
+    { id:"longevity", name:"🧬 Longevity", price:99, desc:"Trendmarker (Demo).", chips:["Prävention","Trend"] }
+  ];
+
+  const addOnPrices = { express:19, comment:29, call:49 };
+
+  const visitCities = {
+    Zuerich: { label:'Zürich', fee:39, express:true },
+    Basel:   { label:'Basel',  fee:35, express:true },
+    Bern:    { label:'Bern',   fee:37, express:false }
+  };
+  const visitSlots = [
+    { id:'0709', label:'07:00 – 09:00', tag:'ideal nüchtern / Hormone' },
+    { id:'0911', label:'09:00 – 11:00', tag:'gut für die meisten Module' },
+    { id:'1618', label:'16:00 – 18:00', tag:'eher nicht nüchtern' }
+  ];
+  const coverageRules = {
+    Zuerich: { re:/^(80|81)\d{2}$/, example:'8000' },
+    Basel:   { re:/^40\d{2}$/,        example:'4000' },
+    Bern:    { re:/^30\d{2}$/,        example:'3000' }
+  };
+
+  function normalizePLZ(v){ return (v||'').toString().trim().replace(/\s+/g,'').slice(0,4); }
+  function validateCoverage(cityKey, plz){
+    const rule = coverageRules[cityKey]; const p = normalizePLZ(plz);
+    if(!p) return { ok:false, msg:`Bitte PLZ eingeben (z. B. ${rule?.example || '8000'}).` };
+    if(p.length !== 4 || !/^\d{4}$/.test(p)) return { ok:false, msg:'PLZ muss 4-stellig sein.' };
+    if(rule && !rule.re.test(p)) return { ok:false, msg:`Aktuell nur Servicegebiet ${visitCities[cityKey]?.label || cityKey} (Demo). Beispiel: ${rule.example}.` };
+    return { ok:true, msg:`✅ Abgedeckt in ${visitCities[cityKey]?.label || cityKey} (Demo).` };
+  }
+  function needsMorningSlot(){
+    const selected = [...state.selectedModules];
+    const fastingNeeded = selected.some(id=> moduleCatalog.find(x=>x.id===id)?.requiresFastingHint);
+    const hormoneSelected = selected.includes('hormone');
+    return fastingNeeded || hormoneSelected || state.pre.fasting;
+  }
+  function recommendedSlotIds(){ return needsMorningSlot() ? ['0709','0911'] : ['0911','1618']; }
+
+  // ---------------------------
+  // State
+  // ---------------------------
+  const state = {
+    pre:{ fasting:false, hoursSinceMeal:0, coffee:'no', alcohol:'no', biotin:'no', sport:'no', smoke:'no' },
+    selectedModules:new Set(),
+    addOns:{ express:false, doctor:'none' },
+    checkout:{ hardBlock:false, warnings:[], suggestions:[] },
+    visit:{ city:'Zuerich', plz:'', covered:false, slot:'', fee:0, status:'unbooked', when:'' },
+    customer:{ reports:[], activeReportId:null, history:[] }
+  };
+
+  // ---------------------------
+  // Helpers
+  // ---------------------------
+  function fmtCHF(n){ return `CHF ${Math.round(n)}`; }
+  function flagFor(value, low, high){ if(value<low) return 'warn'; if(value>high) return (value>high*1.3?'danger':'warn'); return 'ok'; }
+  function preIssues(){
+    const p = state.pre; const issues=[];
+    if(!p.fasting && Number(p.hoursSinceMeal||0) < 8){ issues.push({level:'warn', title:'Nicht nüchtern', desc:`Letzte Mahlzeit vor ${p.hoursSinceMeal}h.`}); }
+    if(p.coffee==='sweet') issues.push({level:'warn', title:'Gesüsstes Getränk', desc:'Kurzfristiger Einfluss auf Glukose/Insulin möglich.'});
+    if(p.coffee==='coffee') issues.push({level:'warn', title:'Kaffee (schwarz)', desc:'Kann Stresshormone/Glukose leicht beeinflussen.'});
+    if(p.alcohol==='yes') issues.push({level:'warn', title:'Alkohol in letzten 24h', desc:'Leberwerte/Triglyceride können erhöht sein.'});
+    if(p.biotin==='yes') issues.push({level:'warn', title:'Biotin/Supplements', desc:'Kann immunologische Tests verfälschen.'});
+    if(p.sport==='yes') issues.push({level:'warn', title:'Intensiver Sport (24h)', desc:'CK/Troponin/Entzündung können erhöht sein.'});
+    if(p.smoke==='yes') issues.push({level:'warn', title:'Raucherstatus', desc:'CEA höher; Kontext beachten.'});
+    const hard = issues.length>=3;
+    return {issues, hard};
+  }
+  function preAffectsTag(test){
+    const p = state.pre, map = {
+      fasting: (!p.fasting && Number(p.hoursSinceMeal||0) < 8) || p.coffee!=='no',
+      alcohol: p.alcohol==='yes',
+      biotin:  p.biotin==='yes',
+      sport:   p.sport==='yes',
+      smoke:   p.smoke==='yes',
+      coffee:  p.coffee!=='no'
+    };
+    if(!test.pre) return null; return map[test.pre] ? test.pre : null;
+  }
+  function preChipText(kind){
+    return {
+      fasting:'Präanalytik: nicht nüchtern',
+      coffee:'Präanalytik: Kaffee/Drink',
+      alcohol:'Präanalytik: Alkohol',
+      biotin:'Präanalytik: Biotin',
+      sport:'Präanalytik: Sport',
+      smoke:'Präanalytik: Raucherstatus'
+    }[kind] || 'Präanalytik';
+  }
+  function renderAlert(el, level, title, desc){ if(!el) return; el.innerHTML = `<div class="dot ${level}"></div><div><p class="title">${title}</p><p class="desc">${desc}</p></div>`; }
+  function toast(title, desc){ const t=document.getElementById('toast'); if(!t) return; document.getElementById('toastT').textContent=title; document.getElementById('toastD').textContent=desc; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200); }
+
+  // ---------------------------
+  // Step 1–2 rendering
+  // ---------------------------
+  function renderPreSummary(){
+    const {issues, hard} = preIssues();
+    const area = document.getElementById('preAlertArea');
+    const badge = document.getElementById('preBadge');
+    const badge2 = document.getElementById('preSummaryBadge');
+    if(!area||!badge||!badge2) return;
+
+    if(issues.length===0){
+      area.innerHTML = `<div class="alert"><div class="dot ok"></div><div><p class="title">Keine Präanalytik-Hinweise</p><p class="desc">Angaben sprechen für gute Vergleichbarkeit.</p></div></div>`;
+      badge.textContent = 'Status: OK'; badge.className='badge ok';
+      badge2.textContent = 'OK'; badge2.className='badge ok';
+    } else {
+      area.innerHTML = issues.map(i=>`<div class="alert"><div class="dot ${i.level}"></div><div><p class="title">${i.title}</p><p class="desc">${i.desc}</p></div></div>`).join('');
+      badge.textContent = hard ? 'Status: kritisch' : 'Status: Hinweise';
+      badge.className = hard ? 'badge danger' : 'badge warn';
+      badge2.textContent = hard ? 'Kritisch' : `${issues.length} Hinweis(e)`;
+      badge2.className = hard ? 'badge danger' : 'badge warn';
+    }
+  }
+
+  function renderModuleTable(moduleKey){
+    const tbody = document.getElementById(`tbl-${moduleKey}`); if(!tbody) return;
+    const data = labs[moduleKey];
+    tbody.innerHTML = data.map(test=>{
+      const fl = flagFor(test.value, test.low, test.high);
+      const pre = preAffectsTag(test); const preHtml = pre ? `<div class="mini">⚠ ${preChipText(pre)}</div>` : '';
+      return `<tr class="trow">
+        <td><div style="font-weight:600">${test.key}</div><div class="mini">${test.unit}</div></td>
+        <td class="value">${test.value}</td><td class="value">${test.ref}</td>
+        <td><div class="flag ${fl}">${fl==='ok'?'OK':(fl==='danger'?'Kritisch':'Auffällig')}</div>${preHtml}</td>
+      </tr>`;
+    }).join('');
+
+    // Badges + AI
+    const flags = data.map(t=>flagFor(t.value,t.low,t.high));
+    const crit = flags.filter(f=>f==='danger').length; const warn = flags.filter(f=>f==='warn').length;
+    const badge = document.getElementById(`badge-${moduleKey}`);
+    if(badge){
+      if(crit>0){ badge.textContent=`Auffällig: ${crit+warn} (kritisch: ${crit})`; badge.className='badge danger'; }
+      else if(warn>0){ badge.textContent=`Auffällig: ${warn}`; badge.className='badge warn'; }
+      else { badge.textContent='Keine Auffälligkeiten'; badge.className='badge ok'; }
+    }
+    const ai = document.getElementById(`ai-${moduleKey}`);
+    const hasPre = data.some(t=>preAffectsTag(t));
+    const preLine = hasPre ? 'Präanalytik: ⚠ Hinweise vorhanden.' : 'Präanalytik: keine relevanten Hinweise.';
+    let next = '';
+    if(moduleKey==='metabolic'){ next = crit? 'Zeitnahe Abklärung erwägen.' : (warn? 'Lifestyle & Verlauf in 8–12 Wochen.' : 'Optional Verlauf 6–12 Monate.'); }
+    if(moduleKey==='lipids'){ next = crit? 'Ärztliche Einordnung (Risiko/Therapie).' : (warn? 'Ernährung/Bewegung, ggf. ApoB.' : 'Verlauf 6–12 Monate.'); }
+    if(moduleKey==='thyroid'){ next = (warn||crit)? 'Kontext/Symptome beachten; ggf. Wiederholen.' : 'Nur bei Symptomen/Verlauf.'; }
+    if(moduleKey==='liver'){ next = (warn||crit)? 'Alkohol/Medikation prüfen; Verlauf 2–4 Wochen.' : 'Optional jährlicher Verlauf.'; }
+    if(moduleKey==='muscle'){ next = (warn||crit)? 'Sportpause 48–72h; bei Brustschmerz ärztlich abklären.' : 'Nur bei Beschwerden/Verlauf.'; }
+    if(moduleKey==='tumor'){ next = (warn||crit)? 'CEA unspezifisch; Kontext wichtig.' : 'Nicht als Screening allein.'; }
+    if(moduleKey==='kidney'){ next = (warn||crit)? 'Hydration/Medikation prüfen; Blutdruck/Urintest erwägen.' : 'Verlauf je nach Risiko.'; }
+    if(moduleKey==='electrolytes'){ next = (warn||crit)? 'Flüssigkeit/Ernährung/Medikamente prüfen.' : 'Meist nur bei Beschwerden relevant.'; }
+    if(moduleKey==='micronutrients'){ next = (warn||crit)? 'Ernährung/Supplemente anpassen; Verlauf 8–12 Wochen.' : 'Optional saisonaler Verlauf (Vit D).' ; }
+    if(moduleKey==='hormones'){ next = (warn||crit)? 'Tageszeit/Stress/Schlaf berücksichtigen; ggf. morgens wiederholen.' : 'Nur bei Symptomen/Fragestellung.'; }
+    if(moduleKey==='inflammation'){ next = (warn||crit)? 'Infekt/Belastung berücksichtigen; Verlauf einplanen.' : 'Nur bei Beschwerden/Profil.'; }
+
+    if(ai){
+      if(crit>0) renderAlert(ai,'danger','KI-Zusammenfassung',`Auffälligkeiten: ${crit+warn} (kritisch: ${crit}). ${next} ${preLine}`);
+      else if(warn>0) renderAlert(ai,'warn','KI-Zusammenfassung',`Auffälligkeiten: ${warn}. ${next} ${preLine}`);
+      else renderAlert(ai,'ok','KI-Zusammenfassung',`Keine Auffälligkeiten. ${next} ${preLine}`);
+    }
+  }
+  function renderAllStep12(){
+    renderPreSummary();
+    ['metabolic','lipids','cbc','kidney','electrolytes','thyroid','micronutrients','hormones','liver','muscle','tumor','inflammation'].forEach(renderModuleTable);
+  }
+
+  // ---------------------------
+  // Step 3 – Module & Checkout
+  // ---------------------------
+  function renderModuleGrid(){
+    const grid=document.getElementById('moduleGrid'); if(!grid) return;
+    grid.innerHTML = moduleCatalog.map(m=>{
+      const sel = state.selectedModules.has(m.id);
+      return `<div class="card price-card">
+        <div class="card-header"><div><h3>${m.name}</h3><p>${m.desc}</p></div><span class="badge">${fmtCHF(m.price)}</span></div>
+        <div class="card-body">
+          <div class="features">${m.chips.map(c=>`<span class="chip">${c}</span>`).join('')}</div>
+          <div class="divider"></div>
+          <button class="btn ${sel?'danger':'primary'}" data-toggle-module="${m.id}">${sel?'Entfernen':'Hinzufügen'}</button>
+          ${m.requiresFastingHint?`<div class="mini">⚠ Nüchtern (8–12h) empfohlen.</div>`:''}
+          ${m.preSensitive?`<div class="mini">⚠ Sensitiv für: ${m.preSensitive.map(preChipText).join(', ')}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+    grid.querySelectorAll('[data-toggle-module]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id=btn.getAttribute('data-toggle-module');
+        if(state.selectedModules.has(id)) state.selectedModules.delete(id); else state.selectedModules.add(id);
+        updateStep3();
+      });
+    });
+  }
+  function recommendedSlotText(){
+    const recIds=recommendedSlotIds();
+    const labels=visitSlots.filter(v=>recIds.includes(v.id)).map(v=>v.label).join(' oder ');
+    return needsMorningSlot()? `Empfohlen: morgens (${labels})` : `Empfehlung: ${labels}`;
+  }
+  function renderVisitControls(){
+    const citySel=document.getElementById('visitCity');
+    const slotSel=document.getElementById('visitSlot');
+    const plzInp=document.getElementById('visitPLZ');
+    if(!citySel||!slotSel) return;
+    citySel.value=state.visit.city;
+    if(plzInp){
+      plzInp.value=state.visit.plz||'';
+      plzInp.placeholder=`z. B. ${coverageRules[state.visit.city]?.example||'8000'}`;
+      const res=validateCoverage(state.visit.city, plzInp.value); state.visit.covered=res.ok;
+      const hint=document.getElementById('visitPLZHint'); if(hint){ hint.textContent=res.msg; hint.style.color=res.ok?'var(--accent2)':'var(--warn)';}
+    }
+    slotSel.innerHTML=visitSlots.map(s=>`<option value="${s.label}">${s.label}</option>`).join('');
+    if(!state.visit.slot) state.visit.slot=visitSlots[0].label;
+    slotSel.value=state.visit.slot;
+    const city=visitCities[state.visit.city];
+    const feeBadge=document.getElementById('visitFeeBadge'); if(feeBadge) feeBadge.textContent=city?fmtCHF(city.fee):'CHF —';
+    const hintEl=document.getElementById('visitSlotHint'); if(hintEl) hintEl.textContent=`Hinweis: ${visitSlots.find(x=>x.label===state.visit.slot)?.tag||'—'} • ${recommendedSlotText()}`;
+    const bits=[]; if(!state.pre.fasting) bits.push('Nüchtern (falls Modul)'); if(state.pre.biotin==='yes') bits.push('Biotin pausieren'); if(state.pre.sport==='yes') bits.push('Sportpause 24–48h'); if(state.pre.alcohol==='yes') bits.push('Kein Alkohol 24h');
+    const prep=document.getElementById('visitPrepMini'); if(prep) prep.textContent=bits.length?`Vorbereitung: ${bits.join(' · ')}`:'Vorbereitung: Alles sieht gut aus.';
+    const ex=document.getElementById('addonExpress'); if(city && !city.express && ex && ex.checked){ ex.checked=false; state.addOns.express=false; toast('Express angepasst', `In ${city.label} aktuell nicht verfügbar (Demo).`); }
+  }
+  function bindVisit(){
+    const citySel=document.getElementById('visitCity'); const slotSel=document.getElementById('visitSlot'); const plzInp=document.getElementById('visitPLZ');
+    if(!citySel||!slotSel) return;
+    citySel.addEventListener('change', ()=>{ state.visit.city=citySel.value; updateStep3(); });
+    if(plzInp){ plzInp.addEventListener('input', ()=>{ state.visit.plz=normalizePLZ(plzInp.value); plzInp.value=state.visit.plz; updateStep3(); }); }
+    slotSel.addEventListener('change', ()=>{ state.visit.slot=slotSel.value; updateStep3(); });
+  }
+
+  function computeCheckoutAssist(){
+    const {issues, hard} = preIssues(); const selected=[...state.selectedModules]; const suggestions=[];
+    if(selected.includes('cardio')) suggestions.push({type:'add', title:'Sinnvolle Ergänzung', desc:'Zu Herz & Stoffwechsel passt HbA1c (+CHF 9 – Demo).'});
+    if(issues.some(i=>i.title.includes('Biotin')) && selected.includes('hormone')) suggestions.push({type:'quality', title:'Biotin-Hinweis', desc:'Biotin kann Schilddrüsenwerte verfälschen – ggf. verschieben.'});
+    if(issues.some(i=>i.title.includes('Sport')) && (selected.includes('performance')||selected.includes('longevity'))) suggestions.push({type:'quality', title:'Sport-Hinweis', desc:'24–48h Sportpause für Verlaufsmessungen.'});
+    if(selected.some(id=>['base','cardio','lipidplus'].includes(id)) && !state.pre.fasting) suggestions.push({type:'quality', title:'Nüchtern empfohlen', desc:'Für Glukose/Insulin/Lipide nüchtern testen.'});
+    if(needsMorningSlot() && state.visit.slot.includes('16:00')) suggestions.push({type:'timing', title:'Zeitfenster Hinweis', desc:'Cortisol/Testosteron morgens (07–11 Uhr).'});
+    const city=visitCities[state.visit.city]; if(city && !city.express) suggestions.push({type:'ops', title:'Express-Verfügbarkeit', desc:`In ${city.label} (Demo) eingeschränkt.`});
+    return { hardBlock:hard, warnings:issues, suggestions };
+  }
+
+  function totalPrice(){
+    let sum=0; const selectedCount=[...state.selectedModules].length;
+    if(selectedCount>0){ const city=visitCities[state.visit.city]; if(city) sum+=city.fee; }
+    [...state.selectedModules].forEach(id=>{ const m=moduleCatalog.find(x=>x.id===id); if(m) sum+=m.price; });
+    if(state._addHbA1c) sum += 9;
+    if(state.addOns.express) sum+=addOnPrices.express;
+    if(state.addOns.doctor==='comment') sum+=addOnPrices.comment;
+    if(state.addOns.doctor==='call') sum+=addOnPrices.call;
+    return sum;
+  }
+
+  function renderCheckoutAssist(){
+    const el=document.getElementById('checkoutAssist'); if(!el) return;
+    const assist=computeCheckoutAssist(); state.checkout=assist;
+    if(assist.hardBlock && state.addOns.express){ state.addOns.express=false; const ex=document.getElementById('addonExpress'); if(ex) ex.checked=false; toast('Express deaktiviert','Mehrere Präanalytik-Konflikte – Qualität vor Speed.'); }
+    const warnCount=assist.warnings.length; const blocks=[];
+    if(warnCount===0){
+      blocks.push(`<div class="alert"><div class="dot ok"></div><div><p class="title">Checkout-Status: optimal</p><p class="desc">Keine relevanten Präanalytik-Hinweise.</p></div></div>`);
+    } else {
+      const level=assist.hardBlock?'danger':'warn'; const title=assist.hardBlock?'Checkout-Status: Wiederholung empfohlen':'Checkout-Status: Hinweise';
+      const desc=assist.hardBlock?'Mehrere Faktoren schränken die Vergleichbarkeit ein.':'Betroffene Werte werden markiert.';
+      blocks.push(`<div class="alert"><div class="dot ${level}"></div><div><p class="title">${title}</p><p class="desc">${desc}</p></div></div>`);
+      blocks.push(`<div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px">${assist.warnings.map(w=>`<span class="chip">⚠ ${w.title}</span>`).join('')}</div>`);
+    }
+    assist.suggestions.slice(0,3).forEach(s=>{
+      const dot=s.type==='add'?'ok':'warn';
+      blocks.push(`<div class="alert" style="margin-top:10px"><div class="dot ${dot}"></div><div><p class="title">${s.title}</p><p class="desc">${s.desc}</p></div></div>`);
+    });
+    el.innerHTML=blocks.join('');
+  }
+
+  function renderCart(){
+    const lines=document.getElementById('cartLines'); const selected=[...state.selectedModules];
+    const badge=document.getElementById('checkoutBadge'); if(badge) badge.textContent=`Warenkorb: ${selected.length} Module`;
+    const entries=[]; const city=visitCities[state.visit.city];
+    if(selected.length===0){ entries.push(`<div class="mini">Noch keine Module ausgewählt.</div>`); }
+    else selected.forEach(id=>{ const m=moduleCatalog.find(x=>x.id===id); if(m) entries.push(`<div class="item" style="cursor:default"><div><div style="font-weight:700; font-size:12px">${m.name}</div><div class="meta">${m.desc}</div></div><div class="badge">${fmtCHF(m.price)}</div></div>`); });
+    if(selected.length>0 && city){ entries.unshift(`<div class="item" style="cursor:default"><div><div style="font-weight:700; font-size:12px">🏠 Hausbesuch ${city.label}</div><div class="meta">${state.visit.slot?('Terminfenster: '+state.visit.slot):'Terminfenster: (bitte wählen)'}</div></div><div class="badge">${fmtCHF(city.fee)}</div></div>`); }
+    if(state._addHbA1c){ entries.push(`<div class="item" style="cursor:default"><div><div style="font-weight:700; font-size:12px">➕ HbA1c (Add-on)</div><div class="meta">Assistenz-Vorschlag</div></div><div class="badge">CHF 9</div></div>`); }
+    if(state.addOns.express){ entries.push(`<div class="item" style="cursor:default"><div><div style="font-weight:700; font-size:12px">🚀 Express-Auswertung</div><div class="meta">Priorisierte Verarbeitung</div></div><div class="badge">${fmtCHF(addOnPrices.express)}</div></div>`); }
+    if(state.addOns.doctor!=='none'){ const price=state.addOns.doctor==='comment'?addOnPrices.comment:addOnPrices.call; const label=state.addOns.doctor==='comment'?'🧑‍⚕️ Medizinischer Kurzkommentar':'📞 Gesundheits-Call (15 min)'; entries.push(`<div class="item" style="cursor:default"><div><div style="font-weight:700; font-size:12px">${label}</div><div class="meta">Optional</div></div><div class="badge">${fmtCHF(price)}</div></div>`); }
+    if(lines) lines.innerHTML=entries.join('');
+
+    const total=totalPrice(); const totalBadge=document.getElementById('totalBadge'); if(totalBadge) totalBadge.textContent=fmtCHF(total);
+    const totalPriceEl=document.getElementById('totalPrice'); if(totalPriceEl) totalPriceEl.textContent=fmtCHF(total);
+    const mini=document.getElementById('totalMini'); if(mini) mini.textContent=state.checkout.hardBlock?'Empfehlung: Abnahme verschieben oder Wiederholung einplanen.':'inkl. Laboranalyse & KI-Assistenz (ohne Diagnose)';
+
+    const cartAlert=document.getElementById('cartAlert');
+    if(cartAlert){
+      if(selected.length===0) renderAlert(cartAlert,'warn','Wähle mindestens ein Modul','Für die Demo kannst du z. B. „Herz & Stoffwechsel“ wählen.');
+      else{
+        const {issues, hard}=preIssues();
+        if(issues.length===0) renderAlert(cartAlert,'ok','Bereit für Checkout','Präanalytik sieht gut aus.');
+        else renderAlert(cartAlert, hard?'danger':'warn', hard?'Qualität: Wiederholung empfohlen':'Qualität: Hinweise', hard?'Mehrere Faktoren verfälschen evtl. Ergebnisse.':'Betroffene Werte werden markiert.');
+      }
+    }
+
+    const pay=document.getElementById('payBtn'); if(pay){
+      pay.disabled=(selected.length===0)||!state.visit.covered; pay.style.opacity=pay.disabled?0.6:1;
+    }
+  }
+  function updateStep3(){ renderModuleGrid(); renderVisitControls(); renderCheckoutAssist(); renderCart(); }
+
+  // ---------------------------
+  // Step 4 – Customer dashboard
+  // ---------------------------
+  function seedCustomerReports(){
+    state.customer.history = [
+      { date:'2025-06-10', values:{'HbA1c':5.3,'HOMA-IR (berechnet)':1.9,'LDL':2.8,'Triglyceride':1.5,'TSH':2.0,'hs-CRP':1.1,'Ferritin':42,'Vitamin D (25-OH)':58,'Omega-3 Index (Demo)':4.0 }},
+      { date:'2025-10-18', values:{'HbA1c':5.4,'HOMA-IR (berechnet)':2.1,'LDL':3.0,'Triglyceride':1.7,'TSH':2.1,'hs-CRP':0.9,'Ferritin':35,'Vitamin D (25-OH)':52,'Omega-3 Index (Demo)':4.1 }},
+      { date:new Date().toISOString().slice(0,10), values:{
+        'HbA1c': labs.metabolic.find(x=>x.key==='HbA1c').value,
+        'HOMA-IR (berechnet)': labs.metabolic.find(x=>x.key==='HOMA-IR (berechnet)').value,
+        'LDL': labs.lipids.find(x=>x.key==='LDL').value,
+        'Triglyceride': labs.lipids.find(x=>x.key==='Triglyceride').value,
+        'TSH': labs.thyroid.find(x=>x.key==='TSH').value,
+        'hs-CRP': labs.inflammation.find(x=>x.key==='hs-CRP').value,
+        'Ferritin': labs.micronutrients.find(x=>x.key==='Ferritin').value,
+        'Vitamin D (25-OH)': labs.micronutrients.find(x=>x.key==='Vitamin D (25-OH)').value,
+        'Omega-3 Index (Demo)': labs.micronutrients.find(x=>x.key==='Omega-3 Index (Demo)').value
+      }}
+    ];
+    state.customer.reports = [
+      { id:'r1', date: state.customer.history[2].date, title:'Report – Heute', modules:['Basis-Check','Herz & Stoffwechsel','Lipide Advanced','Schilddrüse & Hormone','Mikronährstoffe','Leber komplett','Niere & Elektrolyte','Entzündung'], status:'fertig', badge:'ok' },
+      { id:'r2', date:'2025-10-18', title:'Report – Oktober', modules:['Herz & Stoffwechsel','Lipide Advanced'], status:'fertig', badge:'warn' },
+      { id:'r3', date:'2025-06-10', title:'Report – Juni', modules:['Basis-Check','Mikronährstoffe'], status:'fertig', badge:'ok' }
+    ];
+    state.customer.activeReportId='r1';
+  }
+  function overallStatusFromLabs(){
+    const all=Object.values(labs).flat(); const flags=all.map(t=>flagFor(t.value,t.low,t.high));
+    const crit=flags.filter(f=>f==='danger').length; const warn=flags.filter(f=>f==='warn').length;
+    if(crit>0) return { level:'danger', label:`Kritisch (${crit})` };
+    if(warn>0) return { level:'warn', label:`Auffällig (${warn})` };
+    return { level:'ok', label:'Unauffällig' };
+  }
+  function renderCustomerKPIs(){
+    const last=state.customer.history[2]?.date||'—'; const st=overallStatusFromLabs();
+    const next = state.checkout.hardBlock ? 'Wiederholung standardisieren' : (st.level==='danger'?'Zeitnahe Abklärung':(st.level==='warn'?'Lifestyle + Verlauf':'Verlauf 6–12 Mon.'));
+    const k1=document.getElementById('kpiLast'), k2=document.getElementById('kpiStatus'), k3=document.getElementById('kpiNext');
+    if(k1) k1.textContent=last; if(k2) k2.textContent=st.label; if(k3) k3.textContent=next;
+  }
+  function renderReportsList(){
+    const el=document.getElementById('custTimeline'); if(!el) return;
+    const active=state.customer.activeReportId;
+    el.innerHTML = state.customer.reports.map(r=>{
+      const rb = r.badge==='danger'?{cls:'badge danger',label:'Kritisch'}: (r.badge==='warn'?{cls:'badge warn',label:'Auffällig'}:{cls:'badge ok',label:'OK'});
+      return `<div class="item" data-report="${r.id}">
+        <div><div style="font-weight:800; font-size:12px">${r.title} <span class="meta">(${r.date})</span></div>
+        <div class="meta">Module: ${r.modules.join(' • ')} • Status: ${r.status}</div></div>
+        <div style="display:flex; gap:8px; align-items:center">${active===r.id?'<span class="pill">aktiv</span>':''}<div class="${rb.cls}">${rb.label}</div></div>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('[data-report]').forEach(x=>{
+      x.addEventListener('click', ()=>{ state.customer.activeReportId=x.getAttribute('data-report'); renderReport(); });
+    });
+  }
+  function renderReport(){
+    const r=state.customer.reports.find(x=>x.id===state.customer.activeReportId); if(!r) return;
+    const title=document.getElementById('reportTitle'), meta=document.getElementById('reportMeta'), badge=document.getElementById('reportBadge');
+    if(title) title.textContent=r.title; if(meta) meta.textContent=r.date; if(badge) { badge.textContent='OK'; badge.className='badge ok'; }
+    const pre=document.getElementById('reportPre'); if(pre) pre.innerHTML = `<div class="mini">Präanalytik berücksichtigt: ${preIssues().issues.map(i=>i.title).join(' • ') || '—'}</div>`;
+    const ai=document.getElementById('reportAI'); if(ai){ const st=overallStatusFromLabs(); renderAlert(ai, st.level, 'KI-Zusammenfassung', st.level==='ok'?'In den gezeigten Modulen keine Auffälligkeiten.':'Einige Auffälligkeiten – siehe Module.'); }
+  }
+  function renderTrends(){
+    const grid=document.getElementById('trendGrid'); if(!grid) return;
+    const hist=state.customer.history; const keys=['HbA1c','LDL','Triglyceride','TSH','hs-CRP','Ferritin'];
+    grid.innerHTML = keys.map(k=>{
+      const vals=hist.map(h=>h.values[k]); const str=vals.map(v=>v??'—').join(' → ');
+      return `<div class="item" style="cursor:default"><div><div style="font-weight:700; font-size:12px">${k}</div><div class="meta">${str}</div></div><div class="pill">Verlauf</div></div>`;
+    }).join('');
+    const hint=document.getElementById('trendHint'); if(hint) hint.textContent='Demo-Trends aus den letzten drei Zeitpunkten.';
+  }
+  function renderNextSteps(){
+    const box=document.getElementById('nextSteps'); if(!box) return;
+    const st=overallStatusFromLabs(); const steps=[];
+    if(state.checkout.hardBlock) steps.push({t:'Wiederholung standardisieren', d:'Nüchtern, 24–48h kein Sport, Biotin pausieren (wenn vertretbar).'});
+    if(st.level==='danger') steps.push({t:'Medizinische Abklärung', d:'Bei starken Symptomen/notfallartigen Beschwerden sofort ärztlich abklären.'});
+    if(st.level!=='ok') steps.push({t:'Verlaufstest', d:'8–12 Wochen unter gleichen Bedingungen wiederholen.'});
+    else steps.push({t:'Optionaler Verlauf', d:'6–12 Monate oder bei Symptomen/Lifestyle-Änderungen.'});
+    steps.push({t:'Module ergänzen', d:'Je nach Ziel: Mikronährstoffe, Niere/Elektrolyte, großes BB.'});
+    box.innerHTML = steps.map(s=>`<div class="item"><div><div style="font-weight:800; font-size:12px">${s.t}</div><div class="meta">${s.d}</div></div><div class="pill">Assistenz</div></div>`).join('');
+  }
+  function renderVisitJourney(){
+    const box=document.getElementById('visitJourney'), badge=document.getElementById('visitStatusBadge'), meta=document.getElementById('visitMeta');
+    if(!box||!badge||!meta) return;
+    const steps=[{k:'unbooked',label:'🧾 Nicht gebucht'},{k:'booked',label:'📅 Gebucht'},{k:'enroute',label:'🚗 Unterwegs'},{k:'drawn',label:'🩸 Abgenommen'},{k:'lab',label:'🧪 Im Labor'},{k:'ready',label:'📈 Ergebnis bereit'}];
+    const status=state.visit.status||'unbooked'; const activeIdx=Math.max(0, steps.findIndex(s=>s.k===status));
+    box.innerHTML = steps.map((s,i)=>{ const cls=i===activeIdx?'badge':'pill'; const style=i===activeIdx?'background:rgba(96,165,250,.18); border:1px solid rgba(96,165,250,.35)':''; return `<span class="${cls}" style="${style}">${s.label}</span>`; }).join('');
+    const city=visitCities[state.visit.city]; badge.textContent=status==='unbooked'?'—':'Aktiv';
+    meta.textContent=status==='unbooked'?'Buche in Step 3 einen Hausbesuch.':(state.visit.when || `${city?city.label:'—'} · ${state.visit.slot||'—'}`);
+  }
+  function renderCustomer(){ renderVisitJourney(); renderCustomerKPIs(); renderReportsList(); renderReport(); renderTrends(); renderNextSteps(); }
+
+  // ---------------------------
+  // Wiring: tabs
+  // ---------------------------
+  function setView(name){
+    document.querySelectorAll('.tab').forEach(t=>{
+      const active=t.getAttribute('data-view')===name; t.classList.toggle('active', active); t.setAttribute('aria-selected', active?'true':'false');
+    });
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    const view=document.getElementById(`view-${name}`); if(view) view.classList.add('active');
+    const pill=document.getElementById('statusPill');
+    if(pill){ if(name==='step12') pill.textContent='Präanalytik & KI aktiv'; if(name==='step3') pill.textContent='Checkout-Logik aktiv'; if(name==='step4') pill.textContent='Kunden-Dashboard aktiv'; }
+  }
+  document.addEventListener('DOMContentLoaded', ()=>{ document.querySelectorAll('.tab').forEach(t=> t.addEventListener('click', ()=> setView(t.getAttribute('data-view')))); });
+
+  // ---------------------------
+  // Inputs (Step 1)
+  // ---------------------------
+  function bindPreInputs(){
+    const map=[['fasting','fasting','checkbox'],['hoursSinceMeal','hoursSinceMeal','number'],['coffee','coffee','select'],['alcohol','alcohol','select'],['biotin','biotin','select'],['sport','sport','select'],['smoke','smoke','select']];
+    map.forEach(([id,key,type])=>{
+      const el=document.getElementById(id); if(!el) return;
+      const update=()=>{ if(type==='checkbox') state.pre[key]=el.checked; else if(type==='number') state.pre[key]=Number(el.value||0); else state.pre[key]=el.value; renderAllStep12(); updateStep3(); };
+      el.addEventListener('change', update); el.addEventListener('input', update);
+    });
+  }
+
+  // ---------------------------
+  // Add-ons & Buttons (Step 3)
+  // ---------------------------
+  function bindAddOns(){
+    const ex=document.getElementById('addonExpress'); if(ex) ex.addEventListener('change', ()=>{ const assist=computeCheckoutAssist(); const city=visitCities[state.visit.city]; if(((city && !city.express) || assist.hardBlock) && ex.checked){ ex.checked=false; state.addOns.express=false; toast('Express nicht möglich', (city && !city.express)?`In ${city.label} (Demo) nicht verfügbar.`:'Mehrere Präanalytik-Konflikte.'); } else { state.addOns.express=ex.checked; } updateStep3(); });
+    const doc=document.getElementById('addonDoctor'); if(doc) doc.addEventListener('change', ()=>{ state.addOns.doctor=doc.value; updateStep3(); });
+    const pay=document.getElementById('payBtn'); if(pay) pay.addEventListener('click', ()=>{
+      const selected=[...state.selectedModules]; if(selected.length===0) return;
+      const total=totalPrice(); const city=visitCities[state.visit.city]; const slot=state.visit.slot||'—'; const when=`Nächster Hausbesuch: ${city?city.label:'—'} · ${slot}`;
+      state.visit.status='booked'; state.visit.when=when;
+      const assist=computeCheckoutAssist();
+      if(assist.hardBlock) toast('Buchung abgeschlossen (Demo)', `Gesamt: ${fmtCHF(total)}. ${when}. Hinweis: Wiederholung empfohlen.`); else toast('Buchung abgeschlossen (Demo)', `Gesamt: ${fmtCHF(total)}. ${when}. Ergebnisbericht folgt nach Laborauswertung.`);
+      renderCustomer(); setView('step4');
+    });
+  }
+
+  // ---------------------------
+  // Customer actions (Step 4)
+  // ---------------------------
+  function bindCustomerActions(){
+    const d=document.getElementById('btnDownload'); if(d) d.addEventListener('click', ()=> toast('Download (Demo)','Hier würde ein PDF-Report erzeugt.'));
+    const c=document.getElementById('btnCompare'); if(c) c.addEventListener('click', ()=> toast('Verlauf (Demo)','Vergleichsansicht folgt in echter App.'));
+    const r=document.getElementById('btnRepeat'); if(r) r.addEventListener('click', ()=>{ const {hard}=preIssues(); toast('Verlaufstest (Demo)', hard?'Erst standardisieren (nüchtern/kein Sport/kein Biotin), dann planen.':'Empfehlung: Verlauf in 8–12 Wochen.'); });
+  }
+
+  // ---------------------------
+  // Demo & reset
+  // ---------------------------
+  function loadDemo(){
+    state.pre={ fasting:false, hoursSinceMeal:3, coffee:'sweet', alcohol:'yes', biotin:'yes', sport:'yes', smoke:'yes' };
+    ['fasting','hoursSinceMeal','coffee','alcohol','biotin','sport','smoke'].forEach(id=>{ const el=document.getElementById(id); if(!el) return; if(el.type==='checkbox') el.checked=state.pre.fasting; else el.value=state.pre[id]??state.pre[id.replace(/^[a-z]+/,'')]; });
+    state.selectedModules=new Set(['cardio','hormone']); state.addOns.express=false; state.addOns.doctor='comment'; state._addHbA1c=true;
+    const ex=document.getElementById('addonExpress'); if(ex) ex.checked=state.addOns.express; const doc=document.getElementById('addonDoctor'); if(doc) doc.value=state.addOns.doctor;
+    seedCustomerReports(); renderAllStep12(); updateStep3(); renderCustomer(); toast('Demo geladen','Präanalytik-Hinweise, Checkout & Dashboard aktiv.');
+  }
+  function resetAll(){
+    state.pre={ fasting:false, hoursSinceMeal:0, coffee:'no', alcohol:'no', biotin:'no', sport:'no', smoke:'no' };
+    state.selectedModules=new Set(); state.addOns={ express:false, doctor:'none' }; state._addHbA1c=false; seedCustomerReports(); state.customer.activeReportId=null;
+    ['fasting','hoursSinceMeal','coffee','alcohol','biotin','sport','smoke'].forEach(id=>{ const el=document.getElementById(id); if(!el) return; if(el.type==='checkbox') el.checked=false; else el.value = (id==='hoursSinceMeal'?0:'no'); });
+    const ex=document.getElementById('addonExpress'); if(ex) ex.checked=false; const doc=document.getElementById('addonDoctor'); if(doc) doc.value='none';
+    renderAllStep12(); updateStep3(); renderCustomer(); toast('Zurückgesetzt','Alle Demo-Einstellungen zurückgesetzt.');
+  }
+
+  // ---------------------------
+  // Init
+  // ---------------------------
+  function init(){
+    bindPreInputs(); renderAllStep12(); bindAddOns(); bindVisit(); updateStep3();
+    seedCustomerReports(); renderCustomer(); bindCustomerActions();
+    const demo=document.getElementById('demoBtn'); if(demo) demo.addEventListener('click', loadDemo);
+    const reset=document.getElementById('resetBtn'); if(reset) reset.addEventListener('click', resetAll);
+    setView('step12');
+  }
+  init();
+</script>
 </body>
+</html>
