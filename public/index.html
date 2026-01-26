@@ -1,39 +1,6 @@
-<script>
-  // --- Realer Checkout über unsere Express-API ---
-  async function realCheckout() {
-    try {
-      const cart = {
-        items: [
-          { name: "🏠 Hausbesuch", price: 39 },
-          { name: "❤️ Herz & Stoffwechsel", price: 79 }
-        ],
-        city: "Zürich",
-        slot: "07:00 – 09:00"
-      };
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cart)
-      });
-      const data = await res.json();
-      if (data.url) {
-        location.href = data.url; // Stripe Payment Link ODER Stripe Checkout
-      } else {
-        alert('Checkout-Fehler: ' + (data.error || 'unbekannt'));
-      }
-    } catch (e) {
-      alert('Checkout-Fehler: ' + e.message);
-    }
-  }
-
-  // vorhandenen Button anbinden
-  window.addEventListener('DOMContentLoaded', () => {
-    const payBtn = document.getElementById('payBtn');
-    if (payBtn) {
-      payBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        realCheckout();
-      });
-    }
-  });
-</script>
+<!doctype html><meta charset="utf-8">
+<title>Lumena Health – Test</title>
+<body style="font-family:system-ui;max-width:800px;margin:40px auto">
+  <h1>OK – Build funktioniert ✅</h1>
+  <p><a href="/health">Health-Check</a></p>
+</body>
