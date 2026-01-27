@@ -1337,5 +1337,56 @@
   }
   init();
 </script>
-</body>
+ <script>
+  // Step 3: realer Checkout ohne Umbau – wir greifen den Klick ab
+  function buildCartItems(){
+    const items = [];
+    const sel = [...state.selectedModules];
+
+    // Hausbesuch-Fee nur, wenn mind. ein Modul gewählt ist
+    if (sel.length > 0) {
+      const city = visitCities[state.visit.city];
+      if (city) items.push({ name: `🏠 Hausbesuch ${city.label}`, price: Math.round(city.fee) });
+    }
+    // Module
+    sel.forEach(id => {
+      const m = moduleCatalog.find(x => x.id === id);
+      if (m) items.push({ name: m.name, price: Math.round(m.price) });
+    });
+    // Add-ons
+    if (state._addHbA1c) items.push({ name: "➕ HbA1c (Add-on)", price: 9 });
+    if (state.addOns?.express) items.push({ name: "🚀 Express-Auswertung",  price: Math.round((addOnPrices?.express)||19) });
+    if (state.addOns?.doctor === "comment") items.push({ name: "🧑‍⚕️ Kurzkommentar", price: Math.round((addOnPrices?.comment)||29) });
+    if (state.addOns?.doctor === "call")    items.push({ name: "📞 15-min Call",     price: Math.round((addOnPrices?.call)||49) });
+    return items;
+  }
+
+  async function realCheckout(){
+    const items = buildCartItems();
+    if (!items.length) { toast?.("Checkout", "Bitte zuerst Module wählen."); return; }
+    if (!state.visit?.covered) { toast?.("Checkout", "Bitte gültige PLZ im Step 3 angeben."); return; }
+
+    const body = { items, city: state.visit.city, slot: state.visit.slot || "" };
+    const res = await fetch('/api/checkout', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    }).then(r=>r.json()).catch(()=>({}));
+
+    if (res?.url) location.href = res.url;  // Stripe Payment Link ODER /success.html (Demo)
+    else toast?.("Checkout-Fehler", res?.error || "Unbekannter Fehler");
+  }
+
+  // Bestehenden Simulations-Handler elegant aushebeln (capture + stopImmediatePropagation)
+  window.addEventListener('DOMContentLoaded', ()=>{
+    const btn = document.getElementById('payBtn');
+    if (!btn) return;
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      realCheckout();
+    }, true); // capture=true
+  });
+</script>
+ </body>
 </html>
