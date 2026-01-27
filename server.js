@@ -19,10 +19,10 @@ const app = express();
 // Logging
 app.use(morgan('dev'));
 
-// 1) Webhook VOR dem JSON-Parser – mit express.raw() (Stripe-Signatur)
+// 1) Webhook VOR dem JSON-Parser – mit raw() (Stripe-Signatur!)
 app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }), webhookRouter);
 
-// 2) Danach JSON-Parser für ALLE anderen API-Routen
+// 2) Danach JSON-Parser für alle anderen API-Routen
 app.use(express.json({ limit: '2mb' }));
 
 // Static files
