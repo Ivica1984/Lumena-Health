@@ -19,20 +19,20 @@ const app = express();
 // Logging
 app.use(morgan('dev'));
 
-// 1) WEBHOOK VOR dem JSON-Parser und mit express.raw() (für Stripe-Signatur!)
+// 1) Webhook VOR dem JSON-Parser – mit express.raw() (Stripe-Signatur)
 app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }), webhookRouter);
 
-// 2) JSON-Parser für alle anderen API-Routen
+// 2) Danach JSON-Parser für ALLE anderen API-Routen
 app.use(express.json({ limit: '2mb' }));
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API-Router (ohne Webhook)
+// API (ohne Webhook!)
 app.use('/api', apiRouter);
 
-// Healthcheck
-app.get('/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
+// Health
+app.get('/health', (_, res) => res.json({ ok: true, ts: Date.now() }));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
