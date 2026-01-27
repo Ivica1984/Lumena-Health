@@ -8,7 +8,7 @@ router.post('/', (req, res) => {
   try {
     const sig = req.headers['stripe-signature'];
 
-    // req.body ist hier ein Buffer (weil in server.js mit express.raw gemountet)
+    // Hier ist req.body ein Buffer (durch express.raw in server.js)
     const event = stripe.webhooks.constructEvent(
       req.body,
       sig,
