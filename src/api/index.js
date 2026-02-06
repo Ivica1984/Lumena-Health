@@ -4,6 +4,7 @@ import filesRouter from './routes/files.js';
 import aiRouter from './routes/ai.js';
 
 const router = express.Router();
+import ordersRouter from './routes/orders.js';
 
 // KEIN Webhook-Mount hier!
 router.use(express.json({ limit: '2mb' }));
@@ -11,5 +12,6 @@ router.use(express.json({ limit: '2mb' }));
 router.use('/checkout', checkoutRouter);
 router.use('/files', filesRouter);
 router.use('/ai', aiRouter);
+router.use('/orders', ordersRouter);  
 
 export default router;
