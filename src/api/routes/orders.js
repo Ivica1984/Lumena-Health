@@ -1,7 +1,8 @@
-// src/api/routes/orders.js
-const express = require('express');
-const router = express.Router();
-const { createClient } = require('@supabase/supabase-js');
+// src/api/routes/orders.js (ESM)
+import { Router } from 'express';
+import { createClient } from '@supabase/supabase-js';
+
+const router = Router();
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -33,5 +34,4 @@ router.get('/list', async (req, res) => {
   }
 });
 
-module.exports = router;
-
+export default router;
