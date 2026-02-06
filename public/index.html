@@ -1388,5 +1388,123 @@
     }, true); // capture=true
   });
 </script>
+  <!-- ===== LUMENA: Orders-Card (self-contained) – EINSETZEN VOR </body> ===== -->
+<script>
+(function(){
+  // Robuste Namespaces, keine Kollisionen
+  const NS = { mounted:false };
+
+  // Minimal-UI als Template
+  function tpl(){
+    return `
+    <div class="card full" id="ordersCard">
+      <div class="card-header">
+        <div>
+          <h3>Meine Tests – Bestellungen</h3>
+          <p>Stripe-Checkout ➜ Supabase <code>orders</code> (Filter nach E-Mail).</p>
+        </div>
+        <span class="badge">Orders</span>
+      </div>
+      <div class="card-body">
+        <div class="row" style="margin-bottom:10px; gap:8px; flex-wrap:wrap">
+          <input id="ordersEmail" type="email" placeholder="E-Mail für Filter" />
+          <button class="btn" id="ordersRefresh">Refresh Orders</button>
+          <span class="mini" id="ordersStatus">—</span>
+        </div>
+        <div style="overflow:auto">
+          <table id="ordersTable" cellpadding="6" cellspacing="0" style="width:100%">
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Status</th>
+                <th>Betrag</th>
+                <th>Währung</th>
+                <th>Stadt</th>
+                <th>Slot</th>
+                <th>Session</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="mini" style="margin-top:8px">
+          Tipp: Nutze dieselbe E-Mail wie im Stripe-Checkout. Direktcheck: <code>/api/orders/list?email=&lt;deine@mail&gt;</code>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  async function loadOrders(email){
+    const statusEl = document.getElementById('ordersStatus');
+    const tbody = document.querySelector('#ordersTable tbody');
+    if(statusEl) statusEl.textContent = 'Laden...';
+    if(tbody) tbody.innerHTML = '';
+    try{
+      const res = await fetch('/api/orders/list?email=' + encodeURIComponent(email) + '&limit=100');
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const { orders } = await res.json();
+      if(!orders || orders.length===0){
+        if(statusEl) statusEl.textContent = 'Keine Bestellungen gefunden.';
+        return;
+      }
+      orders.forEach(o=>{
+        const tr = document.createElement('tr');
+        tr.className = 'trow';
+        const dt = new Date(o.created_at);
+        const amount = (o.amount_total/100).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+        tr.innerHTML = `
+          <td>${dt.toLocaleString()}</td>
+          <td>${o.status||''}</td>
+          <td>${amount}</td>
+          <td>${(o.currency||'').toUpperCase()}</td>
+          <td>${o.city||''}</td>
+          <td>${o.slot||''}</td>
+          <td><code style="font-family:var(--mono)">${o.session_id||''}</code></td>`;
+        tbody.appendChild(tr);
+      });
+      if(statusEl) statusEl.textContent = `${orders.length} Bestellung(en) geladen.`;
+    }catch(e){
+      console.error(e);
+      if(statusEl) statusEl.textContent = 'Fehler beim Laden.';
+      if (typeof toast === 'function') toast('Orders', 'Fehler beim Laden der Bestellungen.');
+    }
+  }
+
+  function mount(){
+    if(NS.mounted) return;
+    const step4 = document.querySelector('#view-step4 .cards');
+    if(!step4) return; // noch nicht gerendert – später erneut versuchen
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = tpl();
+    step4.appendChild(wrapper.firstElementChild);
+
+    // UI binden
+    const emailInput = document.getElementById('ordersEmail');
+    const btn = document.getElementById('ordersRefresh');
+    const demoEmail = window.localStorage.getItem('demoEmail') || '';
+    if(demoEmail) emailInput.value = demoEmail;
+    btn.addEventListener('click', ()=>{
+      const email = (emailInput.value||'').trim();
+      if(!email){
+        if (typeof toast === 'function') toast('Orders', 'Bitte E-Mail eingeben.');
+        else alert('Bitte E-Mail eingeben.');
+        return;
+      }
+      loadOrders(email);
+    });
+
+    NS.mounted = true;
+  }
+
+  // Versuche zu mounten, sobald Step 4 im DOM ist
+  const tryMount = () => {
+    if (document.querySelector('#view-step4 .cards')) { mount(); clearInterval(t); }
+  };
+  const t = setInterval(tryMount, 200);
+  if (document.readyState === 'complete' || document.readyState === 'interactive') tryMount();
+  else window.addEventListener('DOMContentLoaded', tryMount);
+})();
+</script>
+<!-- ===== /LUMENA: Orders-Card ===== -->
  </body>
 </html>
