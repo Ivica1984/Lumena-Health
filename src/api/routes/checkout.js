@@ -45,8 +45,7 @@ router.post('/', async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items,
-      payment_method_types: ['card'], // Karte aktiv
-      success_url: `${base}/success.html`,
+      success_url: `${base}/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}/`,
       metadata: {
         city: String(body.city || ''),
