@@ -1459,7 +1459,7 @@
           <td>${(o.currency||'').toUpperCase()}</td>
           <td>${o.city||''}</td>
           <td>${o.slot||''}</td>
-          <td><code style="font-family:var(--mono)">${o.session_id||''}</code></td>`;
+          <td><code style="font-family:var(--mono)">${o.session_id||''}</code>${o.receipt_url ? ' <a href="' + o.receipt_url + '" target="_blank" rel="noopener">PDF</a>' : ''}</td>
         tbody.appendChild(tr);
       });
       if(statusEl) statusEl.textContent = `${orders.length} Bestellung(en) geladen.`;
