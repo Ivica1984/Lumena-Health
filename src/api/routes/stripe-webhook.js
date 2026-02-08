@@ -29,7 +29,7 @@ router.post('/', async (req, res) => {
       return res.status(400).send('signature_error');
     }
 
-    // Handle events
+    // ---------- A) checkout.session.completed ----------
     if (event.type === 'checkout.session.completed') {
       const s = event.data.object; // Stripe Checkout Session
 
@@ -37,14 +37,17 @@ router.post('/', async (req, res) => {
       const city  = s.metadata?.city || null;
       const slot  = s.metadata?.slot || null;
 
-      // Optional: PDF-Quittung von Stripe (PaymentIntent -> Charge)
+      // Versuch: Quittungs-URL sofort aus dem PaymentIntent holen
       let receipt_url = null;
       try {
         if (s.payment_intent) {
-          const pi = await stripe.paymentIntents.retrieve(s.payment_intent, { expand: ['charges'] });
+          const pi = await stripe.paymentIntents.retrieve(
+            s.payment_intent,
+            { expand: ['charges'] }
+          );
           receipt_url = pi?.charges?.data?.[0]?.receipt_url || null;
         }
-      } catch (_) {/* ok */}
+      } catch (_) { /* ok */ }
 
       // Idempotent speichern (Upsert via unique index auf session_id)
       const { error } = await supabase
@@ -67,10 +70,42 @@ router.post('/', async (req, res) => {
       return res.status(200).send('ok');
     }
 
+    // ---------- B) charge.succeeded (Quittungslink ggf. nachreichen) ----------
+    if (event.type === 'charge.succeeded') {
+      const ch = event.data.object;              // Stripe Charge
+      const receipt_url = ch.receipt_url || null;
+
+      try {
+        // passende Checkout-Session zur Charge über payment_intent bestimmen
+        let session_id = null;
+        if (ch.payment_intent) {
+          const list = await stripe.checkout.sessions.list({
+            payment_intent: ch.payment_intent,
+            limit: 1
+          });
+          session_id = list.data?.[0]?.id || null;
+        }
+
+        if (session_id && receipt_url) {
+          const { error } = await supabase
+            .from('orders')
+            .update({ receipt_url, status: 'paid' })
+            .eq('session_id', session_id);
+
+          if (error) throw error;
+          console.log('receipt_url_updated', session_id);
+        }
+      } catch (e) {
+        console.error('charge.succeeded handler error', e);
+      }
+
+      return res.status(200).send('ok');
+    }
+
     // Andere Events ignorieren, aber 200 senden
     return res.status(200).send('ignored');
   } catch (e) {
-    console.error('webhook error:', e);
+    console.error('webhook error', e);
     return res.status(500).send('server_error');
   }
 });
