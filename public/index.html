@@ -1288,27 +1288,40 @@
   }
   function renderCustomer(){ renderVisitJourney(); renderCustomerKPIs(); renderReportsList(); renderReport(); renderTrends(); renderNextSteps(); }
 
-  // ---------------------------
-  // Wiring: tabs
-  // ---------------------------
-  function setView(name){
-    document.querySelectorAll('.tab').forEach(t=>{
-      const active=t.getAttribute('data-view')===name; t.classList.toggle('active', active); t.setAttribute('aria-selected', active?'true':'false');
-    });
-    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-    const view=document.getElementById(`view-${name}`); if(view) view.classList.add('active');
-    const pill=document.getElementById('statusPill');
-    if(pill){ if(name==='step12') pill.textContent='Präanalytik & KI aktiv'; if(name==='step3') pill.textContent='Checkout-Logik aktiv'; if(name==='step4') pill.textContent='Kunden-Dashboard aktiv'; }
+// ---------------------------
+// Wiring: tabs
+// ---------------------------
+function setView(name){
+  document.querySelectorAll('.tab').forEach(t=>{
+    const active = t.getAttribute('data-view') === name;
+    t.classList.toggle('active', active);
+    t.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const view = document.getElementById(`view-${name}`);
+  if (view) view.classList.add('active');
+
+  const pill = document.getElementById('statusPill');
+  if (pill){
+    if (name === 'step12') pill.textContent = 'Präanalytik & KI aktiv';
+    if (name === 'step3')  pill.textContent = 'Checkout-Logik aktiv';
+    if (name === 'step4')  pill.textContent = 'Kunden-Dashboard aktiv';
   }
-  
-    // --- NEU: Orders automatisch laden, wenn Step 4 aktiv wird ---
+
+  // --- NEU: Orders automatisch laden, wenn Step 4 aktiv wird ---
   if (name === 'step4') {
     const emailInput = document.getElementById('ordersEmail');
     const email = (emailInput?.value || localStorage.getItem('demoEmail') || '').trim();
     if (email) loadOrders(email);
   }
 }
-  document.addEventListener('DOMContentLoaded', ()=>{ document.querySelectorAll('.tab').forEach(t=> t.addEventListener('click', ()=> setView(t.getAttribute('data-view')))); });
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click', ()=> setView(t.getAttribute('data-view')));
+  });
+});
 
   // ---------------------------
   // Inputs (Step 1)
