@@ -96,4 +96,3 @@ router.get('/session', async (req, res) => {
 });
 
 export default router;
-
