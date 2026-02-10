@@ -755,6 +755,38 @@
 
           </div>
         </div>
+         <div class="card full" id="ordersCard" style="margin-top:12px">
+      <div class="card-header">
+        <div>
+          <h3>Meine Tests – Bestellungen</h3>
+          <p>Stripe-Checkout → Supabase <code>orders</code> (Filter nach E-Mail).</p>
+        </div>
+        <span class="badge">Orders</span>
+      </div>
+      <div class="card-body">
+        <div class="row" style="margin-bottom:10px; gap:8px; flex-wrap:wrap">
+          <input id="ordersEmail" type="email" placeholder="E-Mail für Filter" />
+          <button class="btn" id="ordersRefresh">Refresh Orders</button>
+          <span class="mini" id="ordersStatus">—</span>
+        </div>
+        <div style="overflow:auto">
+          <table id="ordersTable" cellpadding="6" cellspacing="0" style="width:100%">
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Status</th>
+                <th>Betrag</th>
+                <th>Währung</th>
+                <th>Stadt</th>
+                <th>Slot</th>
+                <th>Session</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
       </div>
     </div>
 
