@@ -1378,17 +1378,18 @@ document.addEventListener('DOMContentLoaded', ()=>{
     renderAllStep12(); updateStep3(); renderCustomer(); toast('Zurückgesetzt','Alle Demo-Einstellungen zurückgesetzt.');
   }
 
-  // ---------------------------
-  // Init
-  // ---------------------------
-  function init(){
-    bindPreInputs(); renderAllStep12(); bindAddOns(); bindVisit(); updateStep3();
-    seedCustomerReports(); renderCustomer(); bindCustomerActions();
-    const demo=document.getElementById('demoBtn'); if(demo) demo.addEventListener('click', loadDemo);
-    const reset=document.getElementById('resetBtn'); if(reset) reset.addEventListener('click', resetAll);
-    setView('step12');
-  }
-  init();
+// ---------------------------
+// Init
+// ---------------------------
+function init(){
+  bindPreInputs(); renderAllStep12(); bindAddOns(); bindVisit(); updateStep3();
+  seedCustomerReports(); renderCustomer(); bindCustomerActions();
+  const demo=document.getElementById('demoBtn'); if(demo) demo.addEventListener('click', loadDemo);
+  const reset=document.getElementById('resetBtn'); if(reset) reset.addEventListener('click', resetAll);
+  bindOrdersUI();                // NEU: Orders-UI binden (E-Mail-Feld + Button)
+  setView('step12');
+}
+document.addEventListener('DOMContentLoaded', init);
 </script>
   <script>
 async function loadOrders(email){
