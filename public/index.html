@@ -1369,6 +1369,55 @@
   }
   init();
 </script>
+  <script>
+async function loadOrders(email){
+  const statusEl = document.getElementById('ordersStatus');
+  const tbody = document.querySelector('#ordersTable tbody');
+  if (statusEl) statusEl.textContent = 'Laden...';
+  if (tbody) tbody.innerHTML = '';
+  try{
+    const res = await fetch('/api/orders/list?email=' + encodeURIComponent(email) + '&limit=100');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const { orders } = await res.json();
+    if(!orders?.length){
+      if(statusEl) statusEl.textContent = 'Keine Bestellungen gefunden.';
+      return;
+    }
+    for (const o of orders){
+      const tr = document.createElement('tr'); tr.className='trow';
+      const dt = new Date(o.created_at);
+      const amount = (o.amount_total/100).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+      const pdf = o.receipt_url ? ' <a href="'+o.receipt_url+'" target="_blank" rel="noopener">PDF</a>' : '';
+      tr.innerHTML = `
+        <td>${dt.toLocaleString()}</td>
+        <td>${o.status||''}</td>
+        <td>${amount}</td>
+        <td>${(o.currency||'').toUpperCase()}</td>
+        <td>${o.city||''}</td>
+        <td>${o.slot||''}</td>
+        <td><code style="font-family:var(--mono)">${o.session_id||''}</code>${pdf}</td>`;
+      tbody.appendChild(tr);
+    }
+    if (statusEl) statusEl.textContent = `${orders.length} Bestellung(en) geladen.`;
+  }catch(e){
+    console.error(e);
+    if (statusEl) statusEl.textContent = 'Fehler beim Laden.';
+  }
+}
+
+function bindOrdersUI(){
+  const emailInput = document.getElementById('ordersEmail');
+  const btn = document.getElementById('ordersRefresh');
+  if(!emailInput || !btn) return;
+  const demoEmail = localStorage.getItem('demoEmail') || '';
+  if (demoEmail) emailInput.value = demoEmail;
+  btn.addEventListener('click', ()=>{
+    const email = (emailInput.value||'').trim();
+    if(!email){ alert('Bitte E-Mail eingeben.'); return; }
+    loadOrders(email);
+  });
+}
+</script>
  <script>
   // Step 3: realer Checkout ohne Umbau – wir greifen den Klick ab
   function buildCartItems(){
