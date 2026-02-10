@@ -1300,6 +1300,14 @@
     const pill=document.getElementById('statusPill');
     if(pill){ if(name==='step12') pill.textContent='Präanalytik & KI aktiv'; if(name==='step3') pill.textContent='Checkout-Logik aktiv'; if(name==='step4') pill.textContent='Kunden-Dashboard aktiv'; }
   }
+  
+    // --- NEU: Orders automatisch laden, wenn Step 4 aktiv wird ---
+  if (name === 'step4') {
+    const emailInput = document.getElementById('ordersEmail');
+    const email = (emailInput?.value || localStorage.getItem('demoEmail') || '').trim();
+    if (email) loadOrders(email);
+  }
+}
   document.addEventListener('DOMContentLoaded', ()=>{ document.querySelectorAll('.tab').forEach(t=> t.addEventListener('click', ()=> setView(t.getAttribute('data-view')))); });
 
   // ---------------------------
