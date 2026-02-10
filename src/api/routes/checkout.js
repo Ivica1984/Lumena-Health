@@ -44,17 +44,28 @@ router.post('/', async (req, res) => {
     const base = process.env.PUBLIC_BASE_URL || `https://${req.headers.host || 'localhost:3000'}`;
 
     // Checkout Session erstellen
-    const session = await stripe.checkout.sessions.create({
+    const params = {
       mode: 'payment',
       payment_method_types: ['card'],
       line_items,
-      success_url: `${base}/success.html?session_id={CHECKOUT_SESSION_ID}`, // Session-ID an success.html übergeben
-      cancel_url: `${base}/`,
+      // sehr wichtig für success.html (Auto-Fill via session_id)
+      success_url: `${base}/success.html?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${base}/cancel.html`,
+      // sorgt dafür, dass Stripe die im Checkout eingegebene E-Mail nutzt
+      customer_creation: 'always',
+      // eigene Metadaten mitgeben (werden im Webhook & bei /session zurückgelesen)
       metadata: {
         city: String(body.city || ''),
         slot: String(body.slot || '')
       }
-    });
+    };
+
+    // Falls du im Frontend schon eine E-Mail sammelst (z. B. im Formular):
+    if (typeof body.email === 'string' && body.email.trim()) {
+      params.customer_email = body.email.trim();
+    }
+
+    const session = await stripe.checkout.sessions.create(params);
 
     return res.json({ id: session.id, url: session.url });
   } catch (err) {
@@ -85,3 +96,4 @@ router.get('/session', async (req, res) => {
 });
 
 export default router;
+
