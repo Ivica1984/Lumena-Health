@@ -15,10 +15,14 @@ function checksum(obj) {
   return crypto.createHash('sha256').update(JSON.stringify(obj)).digest('hex');
 }
 
-// OpenAI Call (ohne Diagnose, ohne PII)
+// OpenAI Call (Debug-Logs inklusive)
 async function callOpenAI(prompt) {
   const key = process.env.OPENAI_API_KEY;
-  if (!key) return '';
+
+  if (!key) {
+    console.error('OPENAI_API_KEY missing in Render ENV');
+    return '';
+  }
 
   const resp = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -34,63 +38,93 @@ async function callOpenAI(prompt) {
           role: 'system',
           content:
             'Du bist eine gesundheitsbezogene Assistenz. Keine Diagnose, keine Therapieanweisungen. ' +
-            'Gib kurze, laienverständliche Einordnung + 2–3 nächste Schritte. Keine PII nennen.'
+            'Schreibe kurz und laienverständlich. Gib am Ende 3 nächste Schritte. Keine PII nennen.'
         },
         { role: 'user', content: prompt }
       ]
     })
-  }).then(r => r.json()).catch(() => ({}));
+  });
 
-  return resp?.choices?.[0]?.message?.content || '';
+  const raw = await resp.text();
+
+  // >>> Debug Logs (damit wir exakt sehen, warum es leer ist)
+  console.log('OPENAI_STATUS', resp.status);
+  if (!resp.ok) console.log('OPENAI_ERROR_BODY', raw.slice(0, 800));
+
+  if (!resp.ok) return '';
+
+  let json = {};
+  try {
+    json = JSON.parse(raw);
+  } catch (e) {
+    console.log('OPENAI_PARSE_ERROR', String(e?.message || e));
+    return '';
+  }
+
+  const out = json?.choices?.[0]?.message?.content || '';
+  console.log('OPENAI_TEXT_LEN', out.length);
+
+  return out;
 }
 
 // POST /api/ai/summarize
 router.post('/summarize', async (req, res) => {
   try {
     const body = req.body || {};
+
     const reportId = String(body.reportId || 'r1');
     const modules = Array.isArray(body.modules) ? body.modules : [];
     const labs = body.labs || {};
     const pre = body.pre || {};
+    const order = body.order || {};
 
     if (!modules.length) {
       return res.status(400).json({ error: 'missing_modules' });
     }
 
-    const insights = [];
+    // Gesamt-Prompt: Präanalytik + Werte pro Modul + (optional) Bestell-Kontext
+    const prompt =
+`Aufgabe: Erstelle eine KI-Zusammenfassung (ohne Diagnose) basierend auf Präanalytik + Screening-Werten.
+Kontext:
+- Präanalytik: ${JSON.stringify(pre)}
+- Bestellung/Logistik (optional): ${JSON.stringify(order)}
 
-    for (const m of modules) {
-      // MVP: Regel-Tags (später pro Modul echte Regeln)
-      const tags = { status: 'ok', reasons: [], nextSteps: [] };
+Werte nach Modulen:
+${JSON.stringify(labs, null, 2)}
 
-      const prompt = `Modul: ${m}
-Werte: ${JSON.stringify(labs[m] || labs)}
-Präanalytik: ${JSON.stringify(pre)}
-Liefere: 1) kurze laienverständliche Einordnung (3–5 Sätze, keine Diagnose),
-2) 2–3 nächste Schritte (neutral), 3) Hinweis: bei Beschwerden ärztlich abklären.`;
+Format:
+1) Kurze Gesamteinordnung (3–5 Sätze).
+2) Modul-Sektionen (je Modul 2–3 Bulletpoints: was auffällig, was ok, Kontext durch Präanalytik).
+3) 3 nächste Schritte (konkret, neutral).
+4) Sicherheitshinweis: bei Beschwerden ärztlich abklären.`;
 
-      const text = await callOpenAI(prompt);
+    const summary = await callOpenAI(prompt);
 
-      insights.push({
-        report_id: reportId,
-        module: m,
-        tags,
-        text: text || 'Keine KI-Antwort erhalten.',
-        provider: 'openai',
-        checksum: checksum({ reportId, m, labs: labs[m] || labs, pre })
-      });
-    }
+    // Optional in Supabase speichern (wenn Tabelle existiert)
+    const record = {
+      report_id: reportId,
+      module: 'summary',
+      tags: { modules, pre, order },
+      text: summary || 'Keine KI-Antwort erhalten.',
+      provider: 'openai',
+      checksum: checksum({ reportId, modules, labs, pre, order })
+    };
 
-    // optional speichern (nur wenn ai_insights Tabelle existiert)
     try {
-      await supabase.from('ai_insights').upsert(insights, { onConflict: 'report_id,module' });
+      await supabase.from('ai_insights').upsert([record], { onConflict: 'report_id,module' });
     } catch (_) {
-      // falls Tabelle noch nicht existiert, ignorieren
+      // Tabelle fehlt? dann ignorieren
     }
 
-    return res.json({ insights });
+    // Antwort an Frontend
+    return res.json({
+      provider: 'openai',
+      reportId,
+      summary: record.text
+    });
+
   } catch (e) {
-    console.error(e);
+    console.error('AI summarize error:', e);
     return res.status(500).json({ error: 'server_error' });
   }
 });
