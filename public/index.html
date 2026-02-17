@@ -989,6 +989,61 @@
   }
   function renderAlert(el, level, title, desc){ if(!el) return; el.innerHTML = `<div class="dot ${level}"></div><div><p class="title">${title}</p><p class="desc">${desc}</p></div>`; }
   function toast(title, desc){ const t=document.getElementById('toast'); if(!t) return; document.getElementById('toastT').textContent=title; document.getElementById('toastD').textContent=desc; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200); }
+  // ====== KI Helpers (Präanalytik + Labs Payload) ======
+function collectPreForAI(){
+  return {
+    fasting: !!state?.pre?.fasting,
+    hoursSinceMeal: Number(state?.pre?.hoursSinceMeal || 0),
+    coffee: state?.pre?.coffee || 'no',
+    alcohol: state?.pre?.alcohol || 'no',
+    biotin: state?.pre?.biotin || 'no',
+    sport: state?.pre?.sport || 'no',
+    smoke: state?.pre?.smoke || 'no'
+  };
+}
+
+function collectLabsForAI(){
+  const pick = (arr, key) => Number((arr || []).find(x => x.key === key)?.value ?? 0);
+
+  return {
+    metabolic: {
+      Glukose: pick(labs.metabolic,'Glukose'),
+      Insulin: pick(labs.metabolic,'Insulin'),
+      'HOMA-IR (berechnet)': pick(labs.metabolic,'HOMA-IR (berechnet)'),
+      HbA1c: pick(labs.metabolic,'HbA1c'),
+    },
+    lipids: {
+      'Cholesterin gesamt': pick(labs.lipids,'Cholesterin gesamt'),
+      LDL: pick(labs.lipids,'LDL'),
+      HDL: pick(labs.lipids,'HDL'),
+      Triglyceride: pick(labs.lipids,'Triglyceride'),
+      ApoB: pick(labs.lipids,'ApoB'),
+      'Lp(a)': pick(labs.lipids,'Lp(a)'),
+    },
+    thyroid: {
+      TSH: pick(labs.thyroid,'TSH'),
+      fT4: pick(labs.thyroid,'fT4'),
+      fT3: pick(labs.thyroid,'fT3'),
+    },
+    liver: {
+      'ALT (GPT)': pick(labs.liver,'ALT (GPT)'),
+      'AST (GOT)': pick(labs.liver,'AST (GOT)'),
+      GGT: pick(labs.liver,'GGT'),
+    },
+    inflammation: {
+      'hs-CRP': pick(labs.inflammation,'hs-CRP'),
+      BSG: pick(labs.inflammation,'BSG'),
+    },
+    micronutrients: {
+      Ferritin: pick(labs.micronutrients,'Ferritin'),
+      'Vitamin D (25-OH)': pick(labs.micronutrients,'Vitamin D (25-OH)'),
+      'Vitamin B12': pick(labs.micronutrients,'Vitamin B12'),
+      Folat: pick(labs.micronutrients,'Folat'),
+    }
+  };
+}
+// ====== /KI Helpers ======
+
 
   // ---------------------------
   // Step 1–2 rendering
