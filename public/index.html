@@ -1579,6 +1579,8 @@ function bindOrdersUI(){
     const items = buildCartItems();
     if (!items.length) { toast?.("Checkout", "Bitte zuerst Module wählen."); return; }
     if (!state.visit?.covered) { toast?.("Checkout", "Bitte gültige PLZ im Step 3 angeben."); return; }
+     const preCheck = validatePreForCheckout();
+    if (!preCheck.ok) { toast?.("Präanalytik fehlt", preCheck.msg); return; }
 
     const body = { items, city: state.visit.city, slot: state.visit.slot || "" };
     const res = await fetch('/api/checkout', {
