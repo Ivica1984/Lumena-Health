@@ -1586,35 +1586,31 @@ function bindOrdersUI(){
     return items;
   }
 
-  async function realCheckout(){
-    const items = buildCartItems();
-    if (!items.length) { toast?.("Checkout", "Bitte zuerst Module wählen."); return; }
-    if (!state.visit?.covered) { toast?.("Checkout", "Bitte gültige PLZ im Step 3 angeben."); return; }
-     const preCheck = validatePreForCheckout();
-    if (!preCheck.ok) { toast?.("Präanalytik fehlt", preCheck.msg); return; }
+ async function realCheckout(){
+  const items = buildCartItems();
+  if (!items.length) { toast?.("Checkout", "Bitte zuerst Module wählen."); return; }
+  if (!state.visit?.covered) { toast?.("Checkout", "Bitte gültige PLZ im Step 3 angeben."); return; }
 
-   const body = { 
-  items, 
-  city: state.visit.city, 
-  slot: state.visit.slot || "",
-  pre: preCheck.pre,
-  selectedModules: [...state.selectedModules]
-};
-const res = await fetch('/api/checkout', {
-  method:'POST',
-  headers:{'Content-Type':'application/json'},
-  body: JSON.stringify(body)
-}).then(r=>r.json()).catch(()=>({}));
+  const preCheck = validatePreForCheckout();
+  if (!preCheck.ok) { toast?.("Präanalytik fehlt", preCheck.msg); return; }
 
-    const res = await fetch('/api/checkout', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(body)
-    }).then(r=>r.json()).catch(()=>({}));
+  const body = { 
+    items, 
+    city: state.visit.city, 
+    slot: state.visit.slot || "",
+    pre: preCheck.pre,
+    selectedModules: [...state.selectedModules]
+  };
 
-    if (res?.url) location.href = res.url;  // Stripe Payment Link ODER /success.html (Demo)
-    else toast?.("Checkout-Fehler", res?.error || "Unbekannter Fehler");
-  }
+  const res = await fetch('/api/checkout', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  }).then(r=>r.json()).catch(()=>({}));
+
+  if (res?.url) location.href = res.url;
+  else toast?.("Checkout-Fehler", res?.error || "Unbekannter Fehler");
+}
 
   // Bestehenden Simulations-Handler elegant aushebeln (capture + stopImmediatePropagation)
   window.addEventListener('DOMContentLoaded', ()=>{
