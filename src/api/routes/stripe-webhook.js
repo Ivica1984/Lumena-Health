@@ -1,4 +1,5 @@
 // src/api/routes/stripe-webhook.js (ESM)
+
 import { Router } from 'express';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
@@ -37,7 +38,7 @@ router.post('/', async (req, res) => {
       const city  = s.metadata?.city || null;
       const slot  = s.metadata?.slot || null;
 
-      // Versuch: Quittungs-URL sofort aus dem PaymentIntent holen
+      // Best-effort: Quittungs-URL evtl. schon hier verfügbar (nicht immer!)
       let receipt_url = null;
       try {
         if (s.payment_intent) {
@@ -49,6 +50,9 @@ router.post('/', async (req, res) => {
         }
       } catch (_) { /* ok */ }
 
+      // ✅ NEU: payment_intent_id direkt speichern (Key für charge.succeeded Update)
+      const payment_intent_id = s.payment_intent || null;
+
       // Idempotent speichern (Upsert via unique index auf session_id)
       const { error } = await supabase
         .from('orders')
@@ -58,7 +62,11 @@ router.post('/', async (req, res) => {
           amount_total: s.amount_total,  // Cent
           currency: s.currency,
           email, city, slot,
-          receipt_url
+          receipt_url,
+
+          // ✅ NEU:
+          payment_intent_id,
+          charge_id: null
         }], { onConflict: 'session_id' });
 
       if (error) {
@@ -66,34 +74,51 @@ router.post('/', async (req, res) => {
         return res.status(500).send('supabase_error');
       }
 
-      console.log('payment_success', s.id, email);
+      console.log('payment_success', { session_id: s.id, email, payment_intent_id });
       return res.status(200).send('ok');
     }
 
-    // ---------- B) charge.succeeded (Quittungslink ggf. nachreichen) ----------
+    // ---------- B) charge.succeeded (Quittungslink zuverlässig nachreichen) ----------
     if (event.type === 'charge.succeeded') {
       const ch = event.data.object;              // Stripe Charge
       const receipt_url = ch.receipt_url || null;
+      const payment_intent_id = ch.payment_intent || null;
 
       try {
-        // passende Checkout-Session zur Charge über payment_intent bestimmen
-        let session_id = null;
-        if (ch.payment_intent) {
-          const list = await stripe.checkout.sessions.list({
-            payment_intent: ch.payment_intent,
-            limit: 1
-          });
-          session_id = list.data?.[0]?.id || null;
-        }
-
-        if (session_id && receipt_url) {
-          const { error } = await supabase
+        // ✅ Robust: Update per payment_intent_id (ohne Stripe sessions.list!)
+        if (payment_intent_id && receipt_url) {
+          const { data, error } = await supabase
             .from('orders')
-            .update({ receipt_url, status: 'paid' })
-            .eq('session_id', session_id);
+            .update({
+              receipt_url,
+              status: 'paid',
+              charge_id: ch.id,
+              payment_intent_id
+            })
+            .eq('payment_intent_id', payment_intent_id)
+            .select('session_id');
 
           if (error) throw error;
-          console.log('receipt_url_updated', session_id);
+
+          if (!data || data.length === 0) {
+            // Fall: charge kam vor checkout.session.completed
+            console.log('receipt_url_pending_no_order_yet', {
+              payment_intent_id,
+              charge_id: ch.id
+            });
+          } else {
+            console.log('receipt_url_updated', {
+              session_id: data[0].session_id,
+              payment_intent_id,
+              charge_id: ch.id
+            });
+          }
+        } else {
+          console.log('charge_succeeded_missing_data', {
+            charge_id: ch.id,
+            has_receipt_url: !!receipt_url,
+            has_payment_intent: !!payment_intent_id
+          });
         }
       } catch (e) {
         console.error('charge.succeeded handler error', e);
