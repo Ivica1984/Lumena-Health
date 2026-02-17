@@ -991,6 +991,25 @@
   function toast(title, desc){ const t=document.getElementById('toast'); if(!t) return; document.getElementById('toastT').textContent=title; document.getElementById('toastD').textContent=desc; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200); }
   // ====== KI Helpers (Präanalytik + Labs Payload) ======
 function collectPreForAI(){
+  function validatePreForCheckout(){
+  const p = collectPreForAI();
+
+  // Wenn nicht nüchtern: Stunden seit letzter Mahlzeit müssen >0 sein
+  if (!p.fasting) {
+    const h = Number(p.hoursSinceMeal || 0);
+    if (!Number.isFinite(h) || h <= 0) {
+      return { ok:false, msg:'Bitte Stunden seit letzter Mahlzeit angeben (wenn nicht nüchtern).' };
+    }
+  }
+
+  // Plausibilität
+  if (Number(p.hoursSinceMeal) < 0 || Number(p.hoursSinceMeal) > 24) {
+    return { ok:false, msg:'Stunden seit letzter Mahlzeit muss zwischen 0 und 24 liegen.' };
+  }
+
+  return { ok:true, pre:p };
+}
+
   return {
     fasting: !!state?.pre?.fasting,
     hoursSinceMeal: Number(state?.pre?.hoursSinceMeal || 0),
