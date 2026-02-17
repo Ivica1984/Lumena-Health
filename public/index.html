@@ -99,7 +99,7 @@
     .field label{display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12px; color:var(--text); margin:0 0 7px}
     .field label span{color:var(--muted); font-size:11px}
     .row{display:flex; gap:10px; align-items:center}
-    input[type="text"], input[type="number"], select{
+    input[type="text"], input[type="number"], input[type="email"], select{
       width:100%; background:rgba(16,31,59,.65); border:1px solid var(--border); color:var(--text);
       padding:10px 10px; border-radius:12px; outline:none; font-size:12px;
     }
@@ -180,6 +180,7 @@
     .toast .d{font-size:12px; color:var(--muted); margin:6px 0 0; line-height:1.45}
   </style>
 </head>
+
 <body>
 <div class="app">
   <div class="topbar">
@@ -278,7 +279,7 @@
             </div>
 
             <div class="divider"></div>
-            <div class="footnote">Hinweis: Präanalytik-Hinweise sind **Assistenz**. Bei Unsicherheit wird eine Wiederholung oder ärztliche Rücksprache empfohlen.</div>
+            <div class="footnote">Hinweis: Präanalytik-Hinweise sind <b>Assistenz</b>. Bei Unsicherheit wird eine Wiederholung oder ärztliche Rücksprache empfohlen.</div>
 
           </div>
         </div>
@@ -444,7 +445,7 @@
               <div class="card-body">
                 <table>
                   <thead><tr><th>Wert</th><th>Resultat</th><th>Referenz</th><th>Status</th></tr></thead>
-                <tbody id="tbl-liver"></tbody>
+                  <tbody id="tbl-liver"></tbody>
                 </table>
                 <div class="alert" id="ai-liver"></div>
               </div>
@@ -504,7 +505,7 @@
           </div>
 
           <div style="margin-top:14px" class="footnote">
-            **Wichtiger Hinweis:** Dieses Demo-UI stellt keine Diagnose. Es unterstützt bei Interpretation, Präanalytik-Qualität und sinnvollen Next Steps.
+            <b>Wichtiger Hinweis:</b> Dieses Demo-UI stellt keine Diagnose. Es unterstützt bei Interpretation, Präanalytik-Qualität und sinnvollen Next Steps.
           </div>
         </div>
       </div>
@@ -630,13 +631,13 @@
                       <div class="price" id="totalPrice">CHF 0</div>
                       <div class="mini" id="totalMini">inkl. Laboranalyse & KI-Assistenz</div>
                     </div>
-                    <button class="btn primary" id="payBtn">✅ Checkout simulieren</button>
+                    <button class="btn primary" id="payBtn">✅ Checkout (Stripe)</button>
                   </div>
                 </div>
               </div>
 
               <div class="footnote">
-                Checkout-Logik (Demo): Hinweise berücksichtigen; Express nur wenn Qualität ok.
+                Checkout-Logik: Präanalytik Pflicht • Express nur wenn Qualität ok.
               </div>
             </div>
 
@@ -702,7 +703,7 @@
 
                 <div class="divider"></div>
                 <div class="footnote">
-                  Hinweis: Das Dashboard liefert **Assistenz** und Kontext. Bei starken Beschwerden oder Notfallzeichen bitte umgehend medizinische Hilfe suchen.
+                  Hinweis: Das Dashboard liefert <b>Assistenz</b> und Kontext. Bei starken Beschwerden oder Notfallzeichen bitte umgehend medizinische Hilfe suchen.
                 </div>
               </div>
 
@@ -755,38 +756,40 @@
 
           </div>
         </div>
-         <div class="card full" id="ordersCard" style="margin-top:12px">
-      <div class="card-header">
-        <div>
-          <h3>Meine Tests – Bestellungen</h3>
-          <p>Stripe-Checkout → Supabase <code>orders</code> (Filter nach E-Mail).</p>
+
+        <div class="card full" id="ordersCard" style="margin-top:12px">
+          <div class="card-header">
+            <div>
+              <h3>Meine Tests – Bestellungen</h3>
+              <p>Stripe-Checkout → Supabase <code>orders</code> (Filter nach E-Mail).</p>
+            </div>
+            <span class="badge">Orders</span>
+          </div>
+          <div class="card-body">
+            <div class="row" style="margin-bottom:10px; gap:8px; flex-wrap:wrap">
+              <input id="ordersEmail" type="email" placeholder="E-Mail für Filter" />
+              <button class="btn" id="ordersRefresh">Refresh Orders</button>
+              <span class="mini" id="ordersStatus">—</span>
+            </div>
+            <div style="overflow:auto">
+              <table id="ordersTable" cellpadding="6" cellspacing="0" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>Datum</th>
+                    <th>Status</th>
+                    <th>Betrag</th>
+                    <th>Währung</th>
+                    <th>Stadt</th>
+                    <th>Slot</th>
+                    <th>Session</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
         </div>
-        <span class="badge">Orders</span>
-      </div>
-      <div class="card-body">
-        <div class="row" style="margin-bottom:10px; gap:8px; flex-wrap:wrap">
-          <input id="ordersEmail" type="email" placeholder="E-Mail für Filter" />
-          <button class="btn" id="ordersRefresh">Refresh Orders</button>
-          <span class="mini" id="ordersStatus">—</span>
-        </div>
-        <div style="overflow:auto">
-          <table id="ordersTable" cellpadding="6" cellspacing="0" style="width:100%">
-            <thead>
-              <tr>
-                <th>Datum</th>
-                <th>Status</th>
-                <th>Betrag</th>
-                <th>Währung</th>
-                <th>Stadt</th>
-                <th>Slot</th>
-                <th>Session</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+
       </div>
     </div>
 
@@ -988,82 +991,87 @@
     }[kind] || 'Präanalytik';
   }
   function renderAlert(el, level, title, desc){ if(!el) return; el.innerHTML = `<div class="dot ${level}"></div><div><p class="title">${title}</p><p class="desc">${desc}</p></div>`; }
-  function toast(title, desc){ const t=document.getElementById('toast'); if(!t) return; document.getElementById('toastT').textContent=title; document.getElementById('toastD').textContent=desc; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200); }
-// ====== KI Helpers (Präanalytik + Labs Payload) ======
-function collectPreForAI(){
-  return {
-    fasting: !!state?.pre?.fasting,
-    hoursSinceMeal: Number(state?.pre?.hoursSinceMeal || 0),
-    coffee: state?.pre?.coffee || 'no',
-    alcohol: state?.pre?.alcohol || 'no',
-    biotin: state?.pre?.biotin || 'no',
-    sport: state?.pre?.sport || 'no',
-    smoke: state?.pre?.smoke || 'no'
-  };
-}
-
-function validatePreForCheckout(){
-  const p = collectPreForAI();
-
-  // Wenn nicht nüchtern: Stunden seit letzter Mahlzeit müssen >0 sein
-  if (!p.fasting) {
-    const h = Number(p.hoursSinceMeal || 0);
-    if (!Number.isFinite(h) || h <= 0) {
-      return { ok:false, msg:'Bitte Stunden seit letzter Mahlzeit angeben (wenn nicht nüchtern).' };
-    }
+  function toast(title, desc){
+    const t=document.getElementById('toast'); if(!t) return;
+    document.getElementById('toastT').textContent=title;
+    document.getElementById('toastD').textContent=desc;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),3200);
   }
 
-  // Plausibilität
-  if (Number(p.hoursSinceMeal) < 0 || Number(p.hoursSinceMeal) > 24) {
-    return { ok:false, msg:'Stunden seit letzter Mahlzeit muss zwischen 0 und 24 liegen.' };
+  // ====== KI Helpers (Präanalytik + Labs Payload) ======
+  function collectPreForAI(){
+    return {
+      fasting: !!state?.pre?.fasting,
+      hoursSinceMeal: Number(state?.pre?.hoursSinceMeal || 0),
+      coffee: state?.pre?.coffee || 'no',
+      alcohol: state?.pre?.alcohol || 'no',
+      biotin: state?.pre?.biotin || 'no',
+      sport: state?.pre?.sport || 'no',
+      smoke: state?.pre?.smoke || 'no'
+    };
   }
 
-  return { ok:true, pre:p };
-}
+  function validatePreForCheckout(){
+    const p = collectPreForAI();
 
-function collectLabsForAI(){
-  const pick = (arr, key) => Number((arr || []).find(x => x.key === key)?.value ?? 0);
-
-  return {
-    metabolic: {
-      Glukose: pick(labs.metabolic,'Glukose'),
-      Insulin: pick(labs.metabolic,'Insulin'),
-      'HOMA-IR (berechnet)': pick(labs.metabolic,'HOMA-IR (berechnet)'),
-      HbA1c: pick(labs.metabolic,'HbA1c'),
-    },
-    lipids: {
-      'Cholesterin gesamt': pick(labs.lipids,'Cholesterin gesamt'),
-      LDL: pick(labs.lipids,'LDL'),
-      HDL: pick(labs.lipids,'HDL'),
-      Triglyceride: pick(labs.lipids,'Triglyceride'),
-      ApoB: pick(labs.lipids,'ApoB'),
-      'Lp(a)': pick(labs.lipids,'Lp(a)'),
-    },
-    thyroid: {
-      TSH: pick(labs.thyroid,'TSH'),
-      fT4: pick(labs.thyroid,'fT4'),
-      fT3: pick(labs.thyroid,'fT3'),
-    },
-    liver: {
-      'ALT (GPT)': pick(labs.liver,'ALT (GPT)'),
-      'AST (GOT)': pick(labs.liver,'AST (GOT)'),
-      GGT: pick(labs.liver,'GGT'),
-    },
-    inflammation: {
-      'hs-CRP': pick(labs.inflammation,'hs-CRP'),
-      BSG: pick(labs.inflammation,'BSG'),
-    },
-    micronutrients: {
-      Ferritin: pick(labs.micronutrients,'Ferritin'),
-      'Vitamin D (25-OH)': pick(labs.micronutrients,'Vitamin D (25-OH)'),
-      'Vitamin B12': pick(labs.micronutrients,'Vitamin B12'),
-      Folat: pick(labs.micronutrients,'Folat'),
+    // Pflicht: wenn nicht nüchtern -> hoursSinceMeal > 0
+    if (!p.fasting) {
+      const h = Number(p.hoursSinceMeal || 0);
+      if (!Number.isFinite(h) || h <= 0) {
+        return { ok:false, msg:'Bitte Stunden seit letzter Mahlzeit angeben (wenn nicht nüchtern).' };
+      }
     }
-  };
-}
-// ====== /KI Helpers ======
 
+    // Plausibilität
+    if (Number(p.hoursSinceMeal) < 0 || Number(p.hoursSinceMeal) > 24) {
+      return { ok:false, msg:'Stunden seit letzter Mahlzeit muss zwischen 0 und 24 liegen.' };
+    }
 
+    return { ok:true, pre:p };
+  }
+
+  function collectLabsForAI(){
+    const pick = (arr, key) => Number((arr || []).find(x => x.key === key)?.value ?? 0);
+
+    return {
+      metabolic: {
+        Glukose: pick(labs.metabolic,'Glukose'),
+        Insulin: pick(labs.metabolic,'Insulin'),
+        'HOMA-IR (berechnet)': pick(labs.metabolic,'HOMA-IR (berechnet)'),
+        HbA1c: pick(labs.metabolic,'HbA1c'),
+      },
+      lipids: {
+        'Cholesterin gesamt': pick(labs.lipids,'Cholesterin gesamt'),
+        LDL: pick(labs.lipids,'LDL'),
+        HDL: pick(labs.lipids,'HDL'),
+        Triglyceride: pick(labs.lipids,'Triglyceride'),
+        ApoB: pick(labs.lipids,'ApoB'),
+        'Lp(a)': pick(labs.lipids,'Lp(a)'),
+      },
+      thyroid: {
+        TSH: pick(labs.thyroid,'TSH'),
+        fT4: pick(labs.thyroid,'fT4'),
+        fT3: pick(labs.thyroid,'fT3'),
+      },
+      liver: {
+        'ALT (GPT)': pick(labs.liver,'ALT (GPT)'),
+        'AST (GOT)': pick(labs.liver,'AST (GOT)'),
+        GGT: pick(labs.liver,'GGT'),
+      },
+      inflammation: {
+        'hs-CRP': pick(labs.inflammation,'hs-CRP'),
+        BSG: pick(labs.inflammation,'BSG'),
+      },
+      micronutrients: {
+        Ferritin: pick(labs.micronutrients,'Ferritin'),
+        'Vitamin D (25-OH)': pick(labs.micronutrients,'Vitamin D (25-OH)'),
+        'Vitamin B12': pick(labs.micronutrients,'Vitamin B12'),
+        Folat: pick(labs.micronutrients,'Folat'),
+      }
+    };
+  }
+  // ====== /KI Helpers ======
 
   // ---------------------------
   // Step 1–2 rendering
@@ -1090,7 +1098,7 @@ function collectLabsForAI(){
 
   function renderModuleTable(moduleKey){
     const tbody = document.getElementById(`tbl-${moduleKey}`); if(!tbody) return;
-    const data = labs[moduleKey];
+    const data = labs[moduleKey] || [];
     tbody.innerHTML = data.map(test=>{
       const fl = flagFor(test.value, test.low, test.high);
       const pre = preAffectsTag(test); const preHtml = pre ? `<div class="mini">⚠ ${preChipText(pre)}</div>` : '';
@@ -1101,7 +1109,6 @@ function collectLabsForAI(){
       </tr>`;
     }).join('');
 
-    // Badges + AI
     const flags = data.map(t=>flagFor(t.value,t.low,t.high));
     const crit = flags.filter(f=>f==='danger').length; const warn = flags.filter(f=>f==='warn').length;
     const badge = document.getElementById(`badge-${moduleKey}`);
@@ -1110,6 +1117,7 @@ function collectLabsForAI(){
       else if(warn>0){ badge.textContent=`Auffällig: ${warn}`; badge.className='badge warn'; }
       else { badge.textContent='Keine Auffälligkeiten'; badge.className='badge ok'; }
     }
+
     const ai = document.getElementById(`ai-${moduleKey}`);
     const hasPre = data.some(t=>preAffectsTag(t));
     const preLine = hasPre ? 'Präanalytik: ⚠ Hinweise vorhanden.' : 'Präanalytik: keine relevanten Hinweise.';
@@ -1204,7 +1212,7 @@ function collectLabsForAI(){
     if(issues.some(i=>i.title.includes('Biotin')) && selected.includes('hormone')) suggestions.push({type:'quality', title:'Biotin-Hinweis', desc:'Biotin kann Schilddrüsenwerte verfälschen – ggf. verschieben.'});
     if(issues.some(i=>i.title.includes('Sport')) && (selected.includes('performance')||selected.includes('longevity'))) suggestions.push({type:'quality', title:'Sport-Hinweis', desc:'24–48h Sportpause für Verlaufsmessungen.'});
     if(selected.some(id=>['base','cardio','lipidplus'].includes(id)) && !state.pre.fasting) suggestions.push({type:'quality', title:'Nüchtern empfohlen', desc:'Für Glukose/Insulin/Lipide nüchtern testen.'});
-    if(needsMorningSlot() && state.visit.slot.includes('16:00')) suggestions.push({type:'timing', title:'Zeitfenster Hinweis', desc:'Cortisol/Testosteron morgens (07–11 Uhr).'});
+    if(needsMorningSlot() && (state.visit.slot||'').includes('16:00')) suggestions.push({type:'timing', title:'Zeitfenster Hinweis', desc:'Cortisol/Testosteron morgens (07–11 Uhr).'});
     const city=visitCities[state.visit.city]; if(city && !city.express) suggestions.push({type:'ops', title:'Express-Verfügbarkeit', desc:`In ${city.label} (Demo) eingeschränkt.`});
     return { hardBlock:hard, warnings:issues, suggestions };
   }
@@ -1223,12 +1231,17 @@ function collectLabsForAI(){
   function renderCheckoutAssist(){
     const el=document.getElementById('checkoutAssist'); if(!el) return;
     const assist=computeCheckoutAssist(); state.checkout=assist;
-    if(assist.hardBlock && state.addOns.express){ state.addOns.express=false; const ex=document.getElementById('addonExpress'); if(ex) ex.checked=false; toast('Express deaktiviert','Mehrere Präanalytik-Konflikte – Qualität vor Speed.'); }
+    if(assist.hardBlock && state.addOns.express){
+      state.addOns.express=false;
+      const ex=document.getElementById('addonExpress'); if(ex) ex.checked=false;
+      toast('Express deaktiviert','Mehrere Präanalytik-Konflikte – Qualität vor Speed.');
+    }
     const warnCount=assist.warnings.length; const blocks=[];
     if(warnCount===0){
       blocks.push(`<div class="alert"><div class="dot ok"></div><div><p class="title">Checkout-Status: optimal</p><p class="desc">Keine relevanten Präanalytik-Hinweise.</p></div></div>`);
     } else {
-      const level=assist.hardBlock?'danger':'warn'; const title=assist.hardBlock?'Checkout-Status: Wiederholung empfohlen':'Checkout-Status: Hinweise';
+      const level=assist.hardBlock?'danger':'warn';
+      const title=assist.hardBlock?'Checkout-Status: Wiederholung empfohlen':'Checkout-Status: Hinweise';
       const desc=assist.hardBlock?'Mehrere Faktoren schränken die Vergleichbarkeit ein.':'Betroffene Werte werden markiert.';
       blocks.push(`<div class="alert"><div class="dot ${level}"></div><div><p class="title">${title}</p><p class="desc">${desc}</p></div></div>`);
       blocks.push(`<div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px">${assist.warnings.map(w=>`<span class="chip">⚠ ${w.title}</span>`).join('')}</div>`);
@@ -1249,10 +1262,15 @@ function collectLabsForAI(){
     if(selected.length>0 && city){ entries.unshift(`<div class="item" style="cursor:default"><div><div style="font-weight:700; font-size:12px">🏠 Hausbesuch ${city.label}</div><div class="meta">${state.visit.slot?('Terminfenster: '+state.visit.slot):'Terminfenster: (bitte wählen)'}</div></div><div class="badge">${fmtCHF(city.fee)}</div></div>`); }
     if(state._addHbA1c){ entries.push(`<div class="item" style="cursor:default"><div><div style="font-weight:700; font-size:12px">➕ HbA1c (Add-on)</div><div class="meta">Assistenz-Vorschlag</div></div><div class="badge">CHF 9</div></div>`); }
     if(state.addOns.express){ entries.push(`<div class="item" style="cursor:default"><div><div style="font-weight:700; font-size:12px">🚀 Express-Auswertung</div><div class="meta">Priorisierte Verarbeitung</div></div><div class="badge">${fmtCHF(addOnPrices.express)}</div></div>`); }
-    if(state.addOns.doctor!=='none'){ const price=state.addOns.doctor==='comment'?addOnPrices.comment:addOnPrices.call; const label=state.addOns.doctor==='comment'?'🧑‍⚕️ Medizinischer Kurzkommentar':'📞 Gesundheits-Call (15 min)'; entries.push(`<div class="item" style="cursor:default"><div><div style="font-weight:700; font-size:12px">${label}</div><div class="meta">Optional</div></div><div class="badge">${fmtCHF(price)}</div></div>`); }
+    if(state.addOns.doctor!=='none'){
+      const price=state.addOns.doctor==='comment'?addOnPrices.comment:addOnPrices.call;
+      const label=state.addOns.doctor==='comment'?'🧑‍⚕️ Medizinischer Kurzkommentar':'📞 Gesundheits-Call (15 min)';
+      entries.push(`<div class="item" style="cursor:default"><div><div style="font-weight:700; font-size:12px">${label}</div><div class="meta">Optional</div></div><div class="badge">${fmtCHF(price)}</div></div>`);
+    }
     if(lines) lines.innerHTML=entries.join('');
 
-    const total=totalPrice(); const totalBadge=document.getElementById('totalBadge'); if(totalBadge) totalBadge.textContent=fmtCHF(total);
+    const total=totalPrice();
+    const totalBadge=document.getElementById('totalBadge'); if(totalBadge) totalBadge.textContent=fmtCHF(total);
     const totalPriceEl=document.getElementById('totalPrice'); if(totalPriceEl) totalPriceEl.textContent=fmtCHF(total);
     const mini=document.getElementById('totalMini'); if(mini) mini.textContent=state.checkout.hardBlock?'Empfehlung: Abnahme verschieben oder Wiederholung einplanen.':'inkl. Laboranalyse & KI-Assistenz (ohne Diagnose)';
 
@@ -1266,14 +1284,16 @@ function collectLabsForAI(){
       }
     }
 
-    const pay=document.getElementById('payBtn'); if(pay){
-      pay.disabled=(selected.length===0)||!state.visit.covered; pay.style.opacity=pay.disabled?0.6:1;
+    const pay=document.getElementById('payBtn');
+    if(pay){
+      pay.disabled=(selected.length===0)||!state.visit.covered;
+      pay.style.opacity=pay.disabled?0.6:1;
     }
   }
   function updateStep3(){ renderModuleGrid(); renderVisitControls(); renderCheckoutAssist(); renderCart(); }
 
   // ---------------------------
-  // Step 4 – Customer dashboard
+  // Step 4 – Customer dashboard (Demo)
   // ---------------------------
   function seedCustomerReports(){
     state.customer.history = [
@@ -1326,50 +1346,49 @@ function collectLabsForAI(){
       x.addEventListener('click', ()=>{ state.customer.activeReportId=x.getAttribute('data-report'); renderReport(); });
     });
   }
+
   function renderReport(){
     const r=state.customer.reports.find(x=>x.id===state.customer.activeReportId); if(!r) return;
     const title=document.getElementById('reportTitle'), meta=document.getElementById('reportMeta'), badge=document.getElementById('reportBadge');
-    if(title) title.textContent=r.title; if(meta) meta.textContent=r.date; if(badge) { badge.textContent='OK'; badge.className='badge ok'; }
-    const pre=document.getElementById('reportPre'); if(pre) pre.innerHTML = `<div class="mini">Präanalytik berücksichtigt: ${preIssues().issues.map(i=>i.title).join(' • ') || '—'}</div>`;
+    if(title) title.textContent=r.title; if(meta) meta.textContent=r.date;
+    if(badge) { badge.textContent='OK'; badge.className='badge ok'; }
+
+    const pre=document.getElementById('reportPre');
+    if(pre) pre.innerHTML = `<div class="mini">Präanalytik berücksichtigt: ${preIssues().issues.map(i=>i.title).join(' • ') || '—'}</div>`;
+
     const ai = document.getElementById('reportAI');
-if (ai) {
-  // Sofort Ladeanzeige
-  renderAlert(ai, 'warn', 'KI-Zusammenfassung', 'Wird geladen…');
+    if (ai) {
+      renderAlert(ai, 'warn', 'KI-Zusammenfassung', 'Wird geladen…');
 
-  const payload = {
-    reportId: state?.customer?.activeReportId || 'r1',
-    modules: ['metabolic','lipids','thyroid','liver','inflammation','micronutrients'],
-    labs: collectLabsForAI(),
-    pre: collectPreForAI(),
-    order: { city: state?.visit?.city || null, slot: state?.visit?.slot || null }
-  };
+      const payload = {
+        reportId: state?.customer?.activeReportId || 'r1',
+        modules: ['metabolic','lipids','thyroid','liver','inflammation','micronutrients'],
+        labs: collectLabsForAI(),
+        pre: collectPreForAI(),
+        order: { city: state?.visit?.city || null, slot: state?.visit?.slot || null }
+      };
 
-  fetch('/api/ai/summarize', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-  .then(r => r.json())
-  .then(data => {
-    // Status für den Dot übernehmen wir weiterhin aus deinem lokalen Overall-Status
-    const st = overallStatusFromLabs();
+      fetch('/api/ai/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(r => r.json())
+      .then(data => {
+        const st = overallStatusFromLabs();
+        const text =
+          (data?.summary
+            || (Array.isArray(data?.insights) ? data.insights.map(x => x.text).join('\n\n') : '')
+            || 'Keine KI-Antwort.');
+        renderAlert(ai, st.level || 'ok', 'KI-Zusammenfassung', text.replace(/\n/g, '<br>'));
+      })
+      .catch(err => {
+        console.error(err);
+        renderAlert(ai, 'danger', 'KI-Zusammenfassung', 'Fehler beim Laden der KI-Zusammenfassung.');
+      });
+    }
+  }
 
-    // Backend liefert entweder {summary} oder {insights:[...]}
-    const text =
-      (data?.summary
-        || (Array.isArray(data?.insights) ? data.insights.map(x => x.text).join('\n\n') : '')
-        || 'Keine KI-Antwort.');
-
-    // renderAlert nutzt plain text → wir ersetzen Zeilenumbrüche für HTML
-    renderAlert(ai, st.level || 'ok', 'KI-Zusammenfassung', text.replace(/\n/g, '<br>'));
-  })
-  .catch(err => {
-    console.error(err);
-    renderAlert(ai, 'danger', 'KI-Zusammenfassung', 'Fehler beim Laden der KI-Zusammenfassung.');
-  });
-}
-
-}
   function renderTrends(){
     const grid=document.getElementById('trendGrid'); if(!grid) return;
     const hist=state.customer.history; const keys=['HbA1c','LDL','Triglyceride','TSH','hs-CRP','Ferritin'];
@@ -1379,6 +1398,7 @@ if (ai) {
     }).join('');
     const hint=document.getElementById('trendHint'); if(hint) hint.textContent='Demo-Trends aus den letzten drei Zeitpunkten.';
   }
+
   function renderNextSteps(){
     const box=document.getElementById('nextSteps'); if(!box) return;
     const st=overallStatusFromLabs(); const steps=[];
@@ -1389,6 +1409,7 @@ if (ai) {
     steps.push({t:'Module ergänzen', d:'Je nach Ziel: Mikronährstoffe, Niere/Elektrolyte, großes BB.'});
     box.innerHTML = steps.map(s=>`<div class="item"><div><div style="font-weight:800; font-size:12px">${s.t}</div><div class="meta">${s.d}</div></div><div class="pill">Assistenz</div></div>`).join('');
   }
+
   function renderVisitJourney(){
     const box=document.getElementById('visitJourney'), badge=document.getElementById('visitStatusBadge'), meta=document.getElementById('visitMeta');
     if(!box||!badge||!meta) return;
@@ -1398,42 +1419,42 @@ if (ai) {
     const city=visitCities[state.visit.city]; badge.textContent=status==='unbooked'?'—':'Aktiv';
     meta.textContent=status==='unbooked'?'Buche in Step 3 einen Hausbesuch.':(state.visit.when || `${city?city.label:'—'} · ${state.visit.slot||'—'}`);
   }
+
   function renderCustomer(){ renderVisitJourney(); renderCustomerKPIs(); renderReportsList(); renderReport(); renderTrends(); renderNextSteps(); }
 
-// ---------------------------
-// Wiring: tabs
-// ---------------------------
-function setView(name){
-  document.querySelectorAll('.tab').forEach(t=>{
-    const active = t.getAttribute('data-view') === name;
-    t.classList.toggle('active', active);
-    t.setAttribute('aria-selected', active ? 'true' : 'false');
-  });
+  // ---------------------------
+  // Wiring: tabs
+  // ---------------------------
+  function setView(name){
+    document.querySelectorAll('.tab').forEach(t=>{
+      const active = t.getAttribute('data-view') === name;
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
 
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  const view = document.getElementById(`view-${name}`);
-  if (view) view.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    const view = document.getElementById(`view-${name}`);
+    if (view) view.classList.add('active');
 
-  const pill = document.getElementById('statusPill');
-  if (pill){
-    if (name === 'step12') pill.textContent = 'Präanalytik & KI aktiv';
-    if (name === 'step3')  pill.textContent = 'Checkout-Logik aktiv';
-    if (name === 'step4')  pill.textContent = 'Kunden-Dashboard aktiv';
+    const pill = document.getElementById('statusPill');
+    if (pill){
+      if (name === 'step12') pill.textContent = 'Präanalytik & KI aktiv';
+      if (name === 'step3')  pill.textContent = 'Checkout-Logik aktiv';
+      if (name === 'step4')  pill.textContent = 'Kunden-Dashboard aktiv';
+    }
+
+    if (name === 'step4') {
+      const emailInput = document.getElementById('ordersEmail');
+      const email = (emailInput?.value || localStorage.getItem('demoEmail') || '').trim();
+      if (email && typeof loadOrders === 'function') loadOrders(email);
+    }
   }
 
-  // --- NEU: Orders automatisch laden, wenn Step 4 aktiv wird ---
-  if (name === 'step4') {
-    const emailInput = document.getElementById('ordersEmail');
-    const email = (emailInput?.value || localStorage.getItem('demoEmail') || '').trim();
-    if (email) loadOrders(email);
-  }
-}
-
-document.addEventListener('DOMContentLoaded', ()=>{
-  document.querySelectorAll('.tab').forEach(t=>{
-    t.addEventListener('click', ()=> setView(t.getAttribute('data-view')));
+  document.addEventListener('DOMContentLoaded', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>{
+      t.addEventListener('click', ()=> setView(t.getAttribute('data-view')));
+    });
   });
-});
 
   // ---------------------------
   // Inputs (Step 1)
@@ -1448,17 +1469,35 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
 
   // ---------------------------
-  // Add-ons & Buttons (Step 3)
+  // Add-ons & Buttons (Step 3) - Demo Handler bleibt (wird von capture überschrieben)
   // ---------------------------
   function bindAddOns(){
-    const ex=document.getElementById('addonExpress'); if(ex) ex.addEventListener('change', ()=>{ const assist=computeCheckoutAssist(); const city=visitCities[state.visit.city]; if(((city && !city.express) || assist.hardBlock) && ex.checked){ ex.checked=false; state.addOns.express=false; toast('Express nicht möglich', (city && !city.express)?`In ${city.label} (Demo) nicht verfügbar.`:'Mehrere Präanalytik-Konflikte.'); } else { state.addOns.express=ex.checked; } updateStep3(); });
-    const doc=document.getElementById('addonDoctor'); if(doc) doc.addEventListener('change', ()=>{ state.addOns.doctor=doc.value; updateStep3(); });
-    const pay=document.getElementById('payBtn'); if(pay) pay.addEventListener('click', ()=>{
+    const ex=document.getElementById('addonExpress');
+    if(ex) ex.addEventListener('change', ()=>{
+      const assist=computeCheckoutAssist();
+      const city=visitCities[state.visit.city];
+      if(((city && !city.express) || assist.hardBlock) && ex.checked){
+        ex.checked=false; state.addOns.express=false;
+        toast('Express nicht möglich', (city && !city.express)?`In ${city.label} (Demo) nicht verfügbar.`:'Mehrere Präanalytik-Konflikte.');
+      } else {
+        state.addOns.express=ex.checked;
+      }
+      updateStep3();
+    });
+
+    const doc=document.getElementById('addonDoctor');
+    if(doc) doc.addEventListener('change', ()=>{ state.addOns.doctor=doc.value; updateStep3(); });
+
+    // Demo-Fallback (wird durch capture-Handler im unteren Script blockiert)
+    const pay=document.getElementById('payBtn');
+    if(pay) pay.addEventListener('click', ()=>{
       const selected=[...state.selectedModules]; if(selected.length===0) return;
-      const total=totalPrice(); const city=visitCities[state.visit.city]; const slot=state.visit.slot||'—'; const when=`Nächster Hausbesuch: ${city?city.label:'—'} · ${slot}`;
+      const total=totalPrice(); const city=visitCities[state.visit.city]; const slot=state.visit.slot||'—';
+      const when=`Nächster Hausbesuch: ${city?city.label:'—'} · ${slot}`;
       state.visit.status='booked'; state.visit.when=when;
       const assist=computeCheckoutAssist();
-      if(assist.hardBlock) toast('Buchung abgeschlossen (Demo)', `Gesamt: ${fmtCHF(total)}. ${when}. Hinweis: Wiederholung empfohlen.`); else toast('Buchung abgeschlossen (Demo)', `Gesamt: ${fmtCHF(total)}. ${when}. Ergebnisbericht folgt nach Laborauswertung.`);
+      if(assist.hardBlock) toast('Buchung abgeschlossen (Demo)', `Gesamt: ${fmtCHF(total)}. ${when}. Hinweis: Wiederholung empfohlen.`);
+      else toast('Buchung abgeschlossen (Demo)', `Gesamt: ${fmtCHF(total)}. ${when}. Ergebnisbericht folgt nach Laborauswertung.`);
       renderCustomer(); setView('step4');
     });
   }
@@ -1477,132 +1516,155 @@ document.addEventListener('DOMContentLoaded', ()=>{
   // ---------------------------
   function loadDemo(){
     state.pre={ fasting:false, hoursSinceMeal:3, coffee:'sweet', alcohol:'yes', biotin:'yes', sport:'yes', smoke:'yes' };
-    ['fasting','hoursSinceMeal','coffee','alcohol','biotin','sport','smoke'].forEach(id=>{ const el=document.getElementById(id); if(!el) return; if(el.type==='checkbox') el.checked=state.pre.fasting; else el.value=state.pre[id]??state.pre[id.replace(/^[a-z]+/,'')]; });
+    ['fasting','hoursSinceMeal','coffee','alcohol','biotin','sport','smoke'].forEach(id=>{
+      const el=document.getElementById(id); if(!el) return;
+      if(el.type==='checkbox') el.checked=state.pre.fasting;
+      else el.value=state.pre[id];
+    });
     state.selectedModules=new Set(['cardio','hormone']); state.addOns.express=false; state.addOns.doctor='comment'; state._addHbA1c=true;
-    const ex=document.getElementById('addonExpress'); if(ex) ex.checked=state.addOns.express; const doc=document.getElementById('addonDoctor'); if(doc) doc.value=state.addOns.doctor;
-    seedCustomerReports(); renderAllStep12(); updateStep3(); renderCustomer(); toast('Demo geladen','Präanalytik-Hinweise, Checkout & Dashboard aktiv.');
+    const ex=document.getElementById('addonExpress'); if(ex) ex.checked=state.addOns.express;
+    const doc=document.getElementById('addonDoctor'); if(doc) doc.value=state.addOns.doctor;
+
+    seedCustomerReports(); renderAllStep12(); updateStep3(); renderCustomer();
+    toast('Demo geladen','Präanalytik-Hinweise, Checkout & Dashboard aktiv.');
   }
+
   function resetAll(){
     state.pre={ fasting:false, hoursSinceMeal:0, coffee:'no', alcohol:'no', biotin:'no', sport:'no', smoke:'no' };
-    state.selectedModules=new Set(); state.addOns={ express:false, doctor:'none' }; state._addHbA1c=false; seedCustomerReports(); state.customer.activeReportId=null;
-    ['fasting','hoursSinceMeal','coffee','alcohol','biotin','sport','smoke'].forEach(id=>{ const el=document.getElementById(id); if(!el) return; if(el.type==='checkbox') el.checked=false; else el.value = (id==='hoursSinceMeal'?0:'no'); });
-    const ex=document.getElementById('addonExpress'); if(ex) ex.checked=false; const doc=document.getElementById('addonDoctor'); if(doc) doc.value='none';
-    renderAllStep12(); updateStep3(); renderCustomer(); toast('Zurückgesetzt','Alle Demo-Einstellungen zurückgesetzt.');
+    state.selectedModules=new Set(); state.addOns={ express:false, doctor:'none' }; state._addHbA1c=false;
+    seedCustomerReports(); state.customer.activeReportId=null;
+
+    ['fasting','hoursSinceMeal','coffee','alcohol','biotin','sport','smoke'].forEach(id=>{
+      const el=document.getElementById(id); if(!el) return;
+      if(el.type==='checkbox') el.checked=false;
+      else el.value = (id==='hoursSinceMeal'?0:'no');
+    });
+
+    const ex=document.getElementById('addonExpress'); if(ex) ex.checked=false;
+    const doc=document.getElementById('addonDoctor'); if(doc) doc.value='none';
+
+    renderAllStep12(); updateStep3(); renderCustomer();
+    toast('Zurückgesetzt','Alle Demo-Einstellungen zurückgesetzt.');
   }
 
-// ---------------------------
-// Init
-// ---------------------------
-function init(){
-  bindPreInputs(); renderAllStep12(); bindAddOns(); bindVisit(); updateStep3();
-  seedCustomerReports(); renderCustomer(); bindCustomerActions();
-  const demo=document.getElementById('demoBtn'); if(demo) demo.addEventListener('click', loadDemo);
-  const reset=document.getElementById('resetBtn'); if(reset) reset.addEventListener('click', resetAll);
-  bindOrdersUI();                // NEU: Orders-UI binden (E-Mail-Feld + Button)
-  setView('step12');
-}
-document.addEventListener('DOMContentLoaded', init);
-</script>
-  <script>
-async function loadOrders(email){
-  const statusEl = document.getElementById('ordersStatus');
-  const tbody = document.querySelector('#ordersTable tbody');
-  if (statusEl) statusEl.textContent = 'Laden...';
-  if (tbody) tbody.innerHTML = '';
-  try{
-    const res = await fetch('/api/orders/list?email=' + encodeURIComponent(email) + '&limit=100');
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const { orders } = await res.json();
-    if(!orders?.length){
-      if(statusEl) statusEl.textContent = 'Keine Bestellungen gefunden.';
-      return;
-    }
-    for (const o of orders){
-      const tr = document.createElement('tr'); tr.className='trow';
-      const dt = new Date(o.created_at);
-      const amount = (o.amount_total/100).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
-      const pdf = o.receipt_url ? ' <a href="'+o.receipt_url+'" target="_blank" rel="noopener">PDF</a>' : '';
-      tr.innerHTML = `
-        <td>${dt.toLocaleString()}</td>
-        <td>${o.status||''}</td>
-        <td>${amount}</td>
-        <td>${(o.currency||'').toUpperCase()}</td>
-        <td>${o.city||''}</td>
-        <td>${o.slot||''}</td>
-        <td><code style="font-family:var(--mono)">${o.session_id||''}</code>${pdf}</td>`;
-      tbody.appendChild(tr);
-    }
-    if (statusEl) statusEl.textContent = `${orders.length} Bestellung(en) geladen.`;
-  }catch(e){
-    console.error(e);
-    if (statusEl) statusEl.textContent = 'Fehler beim Laden.';
-  }
-}
+  // ---------------------------
+  // Init
+  // ---------------------------
+  function init(){
+    bindPreInputs(); renderAllStep12();
+    bindAddOns(); bindVisit(); updateStep3();
+    seedCustomerReports(); renderCustomer(); bindCustomerActions();
 
-function bindOrdersUI(){
-  const emailInput = document.getElementById('ordersEmail');
-  const btn = document.getElementById('ordersRefresh');
-  if(!emailInput || !btn) return;
-  const demoEmail = localStorage.getItem('demoEmail') || '';
-  if (demoEmail) emailInput.value = demoEmail;
-  btn.addEventListener('click', ()=>{
-    const email = (emailInput.value||'').trim();
-    if(!email){ alert('Bitte E-Mail eingeben.'); return; }
-    loadOrders(email);
-  });
-}
+    const demo=document.getElementById('demoBtn'); if(demo) demo.addEventListener('click', loadDemo);
+    const reset=document.getElementById('resetBtn'); if(reset) reset.addEventListener('click', resetAll);
+
+    if (typeof bindOrdersUI === 'function') bindOrdersUI();
+    setView('step12');
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
 </script>
- <script>
-  // Step 3: realer Checkout ohne Umbau – wir greifen den Klick ab
+
+<script>
+  async function loadOrders(email){
+    const statusEl = document.getElementById('ordersStatus');
+    const tbody = document.querySelector('#ordersTable tbody');
+    if (statusEl) statusEl.textContent = 'Laden...';
+    if (tbody) tbody.innerHTML = '';
+    try{
+      const res = await fetch('/api/orders/list?email=' + encodeURIComponent(email) + '&limit=100');
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const { orders } = await res.json();
+      if(!orders?.length){
+        if(statusEl) statusEl.textContent = 'Keine Bestellungen gefunden.';
+        return;
+      }
+      for (const o of orders){
+        const tr = document.createElement('tr'); tr.className='trow';
+        const dt = new Date(o.created_at);
+        const amount = (o.amount_total/100).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+        const pdf = o.receipt_url ? ' <a href="'+o.receipt_url+'" target="_blank" rel="noopener">PDF</a>' : '';
+        tr.innerHTML = `
+          <td>${dt.toLocaleString()}</td>
+          <td>${o.status||''}</td>
+          <td>${amount}</td>
+          <td>${(o.currency||'').toUpperCase()}</td>
+          <td>${o.city||''}</td>
+          <td>${o.slot||''}</td>
+          <td><code style="font-family:var(--mono)">${o.session_id||''}</code>${pdf}</td>`;
+        tbody.appendChild(tr);
+      }
+      if (statusEl) statusEl.textContent = `${orders.length} Bestellung(en) geladen.`;
+    }catch(e){
+      console.error(e);
+      if (statusEl) statusEl.textContent = 'Fehler beim Laden.';
+    }
+  }
+
+  function bindOrdersUI(){
+    const emailInput = document.getElementById('ordersEmail');
+    const btn = document.getElementById('ordersRefresh');
+    if(!emailInput || !btn) return;
+    const demoEmail = localStorage.getItem('demoEmail') || '';
+    if (demoEmail) emailInput.value = demoEmail;
+    btn.addEventListener('click', ()=>{
+      const email = (emailInput.value||'').trim();
+      if(!email){ alert('Bitte E-Mail eingeben.'); return; }
+      loadOrders(email);
+    });
+  }
+</script>
+
+<script>
+  // Step 3: realer Checkout – wir greifen den Klick ab
   function buildCartItems(){
     const items = [];
     const sel = [...state.selectedModules];
 
-    // Hausbesuch-Fee nur, wenn mind. ein Modul gewählt ist
     if (sel.length > 0) {
       const city = visitCities[state.visit.city];
       if (city) items.push({ name: `🏠 Hausbesuch ${city.label}`, price: Math.round(city.fee) });
     }
-    // Module
     sel.forEach(id => {
       const m = moduleCatalog.find(x => x.id === id);
       if (m) items.push({ name: m.name, price: Math.round(m.price) });
     });
-    // Add-ons
+
     if (state._addHbA1c) items.push({ name: "➕ HbA1c (Add-on)", price: 9 });
     if (state.addOns?.express) items.push({ name: "🚀 Express-Auswertung",  price: Math.round((addOnPrices?.express)||19) });
     if (state.addOns?.doctor === "comment") items.push({ name: "🧑‍⚕️ Kurzkommentar", price: Math.round((addOnPrices?.comment)||29) });
     if (state.addOns?.doctor === "call")    items.push({ name: "📞 15-min Call",     price: Math.round((addOnPrices?.call)||49) });
+
     return items;
   }
 
- async function realCheckout(){
-  const items = buildCartItems();
-  if (!items.length) { toast?.("Checkout", "Bitte zuerst Module wählen."); return; }
-  if (!state.visit?.covered) { toast?.("Checkout", "Bitte gültige PLZ im Step 3 angeben."); return; }
+  async function realCheckout(){
+    const items = buildCartItems();
+    if (!items.length) { toast?.("Checkout", "Bitte zuerst Module wählen."); return; }
+    if (!state.visit?.covered) { toast?.("Checkout", "Bitte gültige PLZ im Step 3 angeben."); return; }
 
-  const preCheck = validatePreForCheckout();
-  if (!preCheck.ok) { toast?.("Präanalytik fehlt", preCheck.msg); return; }
+    const preCheck = validatePreForCheckout();
+    if (!preCheck.ok) { toast?.("Präanalytik fehlt", preCheck.msg); return; }
 
-  const body = { 
-    items, 
-    city: state.visit.city, 
-    slot: state.visit.slot || "",
-    pre: preCheck.pre,
-    selectedModules: [...state.selectedModules]
-  };
+    const body = {
+      items,
+      city: state.visit.city,
+      slot: state.visit.slot || "",
+      pre: preCheck.pre,
+      selectedModules: [...state.selectedModules]
+    };
 
-  const res = await fetch('/api/checkout', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(body)
-  }).then(r=>r.json()).catch(()=>({}));
+    const res = await fetch('/api/checkout', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    }).then(r=>r.json()).catch(()=>({}));
 
-  if (res?.url) location.href = res.url;
-  else toast?.("Checkout-Fehler", res?.error || "Unbekannter Fehler");
-}
+    if (res?.url) location.href = res.url;
+    else toast?.("Checkout-Fehler", res?.error || "Unbekannter Fehler");
+  }
 
-  // Bestehenden Simulations-Handler elegant aushebeln (capture + stopImmediatePropagation)
+  // Capture: verhindert Demo-Handler und nutzt Stripe Checkout
   window.addEventListener('DOMContentLoaded', ()=>{
     const btn = document.getElementById('payBtn');
     if (!btn) return;
@@ -1610,8 +1672,9 @@ function bindOrdersUI(){
       e.preventDefault();
       e.stopImmediatePropagation();
       realCheckout();
-    }, true); // capture=true
+    }, true);
   });
 </script>
- </body>
+
+</body>
 </html>
