@@ -1582,7 +1582,13 @@ function bindOrdersUI(){
      const preCheck = validatePreForCheckout();
     if (!preCheck.ok) { toast?.("Präanalytik fehlt", preCheck.msg); return; }
 
-    const body = { items, city: state.visit.city, slot: state.visit.slot || "" };
+   const body = { items, city: state.visit.city, slot: state.visit.slot || "" };
+const res = await fetch('/api/checkout', {
+  method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body: JSON.stringify(body)
+}).then(r=>r.json()).catch(()=>({}));
+
     const res = await fetch('/api/checkout', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
