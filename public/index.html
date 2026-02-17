@@ -991,7 +991,18 @@
   function toast(title, desc){ const t=document.getElementById('toast'); if(!t) return; document.getElementById('toastT').textContent=title; document.getElementById('toastD').textContent=desc; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200); }
   // ====== KI Helpers (Präanalytik + Labs Payload) ======
 function collectPreForAI(){
-  function validatePreForCheckout(){
+  return {
+    fasting: !!state?.pre?.fasting,
+    hoursSinceMeal: Number(state?.pre?.hoursSinceMeal || 0),
+    coffee: state?.pre?.coffee || 'no',
+    alcohol: state?.pre?.alcohol || 'no',
+    biotin: state?.pre?.biotin || 'no',
+    sport: state?.pre?.sport || 'no',
+    smoke: state?.pre?.smoke || 'no'
+  };
+}
+
+function validatePreForCheckout(){
   const p = collectPreForAI();
 
   // Wenn nicht nüchtern: Stunden seit letzter Mahlzeit müssen >0 sein
