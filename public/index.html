@@ -1311,8 +1311,45 @@ function collectLabsForAI(){
     const title=document.getElementById('reportTitle'), meta=document.getElementById('reportMeta'), badge=document.getElementById('reportBadge');
     if(title) title.textContent=r.title; if(meta) meta.textContent=r.date; if(badge) { badge.textContent='OK'; badge.className='badge ok'; }
     const pre=document.getElementById('reportPre'); if(pre) pre.innerHTML = `<div class="mini">Präanalytik berücksichtigt: ${preIssues().issues.map(i=>i.title).join(' • ') || '—'}</div>`;
-    const ai=document.getElementById('reportAI'); if(ai){ const st=overallStatusFromLabs(); renderAlert(ai, st.level, 'KI-Zusammenfassung', st.level==='ok'?'In den gezeigten Modulen keine Auffälligkeiten.':'Einige Auffälligkeiten – siehe Module.'); }
-  }
+    const ai = document.getElementById('reportAI');
+if (ai) {
+  // Sofort Ladeanzeige
+  renderAlert(ai, 'warn', 'KI-Zusammenfassung', 'Wird geladen…');
+
+  const payload = {
+    reportId: state?.customer?.activeReportId || 'r1',
+    modules: ['metabolic','lipids','thyroid','liver','inflammation','micronutrients'],
+    labs: collectLabsForAI(),
+    pre: collectPreForAI(),
+    order: { city: state?.visit?.city || null, slot: state?.visit?.slot || null }
+  };
+
+  fetch('/api/ai/summarize', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(r => r.json())
+  .then(data => {
+    // Status für den Dot übernehmen wir weiterhin aus deinem lokalen Overall-Status
+    const st = overallStatusFromLabs();
+
+    // Backend liefert entweder {summary} oder {insights:[...]}
+    const text =
+      (data?.summary
+        || (Array.isArray(data?.insights) ? data.insights.map(x => x.text).join('\n\n') : '')
+        || 'Keine KI-Antwort.');
+
+    // renderAlert nutzt plain text → wir ersetzen Zeilenumbrüche für HTML
+    renderAlert(ai, st.level || 'ok', 'KI-Zusammenfassung', text.replace(/\n/g, '<br>'));
+  })
+  .catch(err => {
+    console.error(err);
+    renderAlert(ai, 'danger', 'KI-Zusammenfassung', 'Fehler beim Laden der KI-Zusammenfassung.');
+  });
+}
+
+}
   function renderTrends(){
     const grid=document.getElementById('trendGrid'); if(!grid) return;
     const hist=state.customer.history; const keys=['HbA1c','LDL','Triglyceride','TSH','hs-CRP','Ferritin'];
