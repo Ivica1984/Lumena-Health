@@ -989,7 +989,7 @@
   }
   function renderAlert(el, level, title, desc){ if(!el) return; el.innerHTML = `<div class="dot ${level}"></div><div><p class="title">${title}</p><p class="desc">${desc}</p></div>`; }
   function toast(title, desc){ const t=document.getElementById('toast'); if(!t) return; document.getElementById('toastT').textContent=title; document.getElementById('toastD').textContent=desc; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200); }
-  // ====== KI Helpers (Präanalytik + Labs Payload) ======
+// ====== KI Helpers (Präanalytik + Labs Payload) ======
 function collectPreForAI(){
   return {
     fasting: !!state?.pre?.fasting,
@@ -1019,17 +1019,6 @@ function validatePreForCheckout(){
   }
 
   return { ok:true, pre:p };
-}
-
-  return {
-    fasting: !!state?.pre?.fasting,
-    hoursSinceMeal: Number(state?.pre?.hoursSinceMeal || 0),
-    coffee: state?.pre?.coffee || 'no',
-    alcohol: state?.pre?.alcohol || 'no',
-    biotin: state?.pre?.biotin || 'no',
-    sport: state?.pre?.sport || 'no',
-    smoke: state?.pre?.smoke || 'no'
-  };
 }
 
 function collectLabsForAI(){
@@ -1073,6 +1062,7 @@ function collectLabsForAI(){
   };
 }
 // ====== /KI Helpers ======
+
 
 
   // ---------------------------
