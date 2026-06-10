@@ -2078,5 +2078,361 @@
   });
 </script>
 
+  /* ================================================================
+   LUMENA HEALTH – LONGEVITY DASHBOARD JS
+   Einfügen: in den bestehenden <script> Block,
+   direkt vor der Zeile: function d2Render() {
+   ================================================================ */
+
+// ── PhenoAge Longevity Score berechnen ──────────────────────────
+function lvCalcScore() {
+  const get = (key) => {
+    for (const cat of Object.values(labs)) {
+      const t = cat.find(x => x.key === key);
+      if (t) return t.value;
+    }
+    return null;
+  };
+
+  const markers = [
+    { key: 'HbA1c',        low: 4.0,  high: 5.6,  weight: 2   },
+    { key: 'hs-CRP',       low: 0,    high: 3.0,  weight: 2   },
+    { key: 'Albumin',      low: 35,   high: 52,   weight: 1.5 },
+    { key: 'Kreatinin',    low: 62,   high: 106,  weight: 1   },
+    { key: 'Glukose',      low: 3.9,  high: 5.5,  weight: 1.5 },
+    { key: 'LDL',          low: 0,    high: 3.0,  weight: 1.5 },
+    { key: 'ApoB',         low: 0,    high: 1.0,  weight: 2   },
+    { key: 'Vitamin D (25-OH)', low: 75, high: 999, weight: 1  },
+    { key: 'TSH',          low: 0.4,  high: 4.0,  weight: 1   },
+  ];
+
+  let totalWeight = 0, okWeight = 0;
+  let found = 0;
+
+  for (const m of markers) {
+    const val = get(m.key);
+    if (val == null) continue;
+    found++;
+    totalWeight += m.weight;
+    const fl = flagFor(val, m.low, m.high);
+    if (fl === 'ok')   okWeight += m.weight;
+    if (fl === 'warn') okWeight += m.weight * 0.5;
+  }
+
+  if (found === 0) return { score: null, bioAge: null };
+
+  const score = Math.round((okWeight / totalWeight) * 100);
+
+  // Biologisches Alter schätzen (vereinfacht)
+  const calAge = state?.customer?.age || 40;
+  const diff = Math.round((score - 70) / 5);
+  const bioAge = Math.max(20, calAge - diff);
+
+  return { score, bioAge, calAge, diff };
+}
+
+// ── Kategorie-Pillar Scores ──────────────────────────────────────
+function lvCalcPillars() {
+  const calcCat = (keys) => {
+    let ok = 0, total = 0;
+    for (const cat of Object.values(labs)) {
+      for (const t of cat) {
+        if (!keys.some(k => t.key.toLowerCase().includes(k.toLowerCase()))) continue;
+        total++;
+        const fl = flagFor(t.value, t.low, t.high);
+        if (fl === 'ok')   ok += 1;
+        if (fl === 'warn') ok += 0.5;
+      }
+    }
+    return total > 0 ? Math.round((ok / total) * 100) : null;
+  };
+
+  return {
+    heart:   calcCat(['LDL','HDL','Cholesterin','ApoB','Lp(a)','Triglyceride']),
+    meta:    calcCat(['Glukose','Insulin','HOMA','HbA1c','C-Peptid']),
+    inflamm: calcCat(['CRP','Fibrinogen','BSG','Homocystein']),
+    organ:   calcCat(['Kreatinin','eGFR','ALT','AST','GGT','Albumin','TSH']),
+    nutr:    calcCat(['Vitamin','Ferritin','B12','Folat','Zink','Selen','Omega']),
+    hormone: calcCat(['Testosteron','DHEA','Cortisol','SHBG','Östradiol']),
+  };
+}
+
+// ── Farbe für Score ──────────────────────────────────────────────
+function lvScoreColor(s) {
+  if (s == null) return 'var(--muted)';
+  if (s >= 80) return '#34d399';
+  if (s >= 60) return '#fbbf24';
+  return '#fb7185';
+}
+function lvScoreLabel(s) {
+  if (s == null) return '—';
+  if (s >= 85) return '🟢 Exzellent';
+  if (s >= 70) return '🟡 Gut';
+  if (s >= 55) return '🟠 Verbesserungspotenzial';
+  return '🔴 Abklärung empfohlen';
+}
+
+// ── Hero rendern ─────────────────────────────────────────────────
+function lvRenderHero() {
+  const { score, bioAge, calAge, diff } = lvCalcScore();
+  const pillars = lvCalcPillars();
+
+  // Biologisches Alter
+  const bioEl  = document.getElementById('lvBioAge');
+  const subEl  = document.getElementById('lvBioSub');
+  const chipEl = document.getElementById('lvBioChips');
+
+  if (bioEl) bioEl.textContent = bioAge ?? '—';
+  if (subEl && bioAge && calAge) {
+    const younger = calAge - bioAge;
+    if (younger > 0)
+      subEl.textContent = `Du bist biologisch ${younger} Jahre jünger als dein Kalenderalter (${calAge})! 🎉`;
+    else if (younger < 0)
+      subEl.textContent = `Biologisch ${Math.abs(younger)} Jahre älter als dein Kalenderalter (${calAge}). Optimierungspotenzial vorhanden.`;
+    else
+      subEl.textContent = `Dein biologisches Alter entspricht deinem Kalenderalter (${calAge}).`;
+  }
+  if (chipEl && score != null) {
+    const cls = score >= 80 ? 'good' : score >= 60 ? 'warn' : 'danger';
+    chipEl.innerHTML = `
+      <span class="lv-chip ${cls}">Score ${score}/100</span>
+      <span class="lv-chip ${diff >= 0 ? 'good' : 'danger'}">${diff >= 0 ? '↓' : '↑'} ${Math.abs(diff ?? 0)} Jahre</span>
+    `;
+  }
+
+  // Score Ring
+  const ringFill = document.getElementById('lvRingFill');
+  const ringNum  = document.getElementById('lvScoreNum');
+  const ringLbl  = document.getElementById('lvScoreLabel');
+  if (ringFill && score != null) {
+    const circ = 327;
+    const offset = circ - (score / 100) * circ;
+    ringFill.style.strokeDashoffset = offset;
+    ringFill.style.stroke = lvScoreColor(score);
+  }
+  if (ringNum) { ringNum.textContent = score ?? '—'; ringNum.style.color = lvScoreColor(score); }
+  if (ringLbl) ringLbl.textContent = lvScoreLabel(score);
+
+  // Pillars
+  const pillarDefs = [
+    { id: 'Heart',   key: 'heart',   val: pillars.heart   },
+    { id: 'Meta',    key: 'meta',    val: pillars.meta    },
+    { id: 'Inflamm', key: 'inflamm', val: pillars.inflamm },
+    { id: 'Organ',   key: 'organ',   val: pillars.organ   },
+    { id: 'Nutr',    key: 'nutr',    val: pillars.nutr    },
+    { id: 'Hormone', key: 'hormone', val: pillars.hormone },
+  ];
+
+  for (const p of pillarDefs) {
+    const bar   = document.getElementById(`lvBar${p.id}`);
+    const score = document.getElementById(`lvScore${p.id}`);
+    if (bar && p.val != null) {
+      bar.style.width = p.val + '%';
+      bar.style.background = lvScoreColor(p.val);
+    }
+    if (score) {
+      score.textContent = p.val != null ? p.val : '—';
+      score.style.color = lvScoreColor(p.val);
+    }
+  }
+}
+
+// ── Cancer Marker rendern ────────────────────────────────────────
+function lvRenderCancer() {
+  const grid  = document.getElementById('lvCancerGrid');
+  const badge = document.getElementById('lvCancerBadge');
+  if (!grid) return;
+
+  const cancerMarkers = [
+    { key: 'CEA',    name: 'CEA',    unit: 'µg/L',  low: 0, high: 5,    desc: 'Darm, Lunge, Brust · Allgemeiner Marker' },
+    { key: 'PSA',    name: 'PSA',    unit: 'µg/L',  low: 0, high: 4,    desc: 'Prostata · nur für Männer relevant' },
+    { key: 'CA 125', name: 'CA 125', unit: 'U/mL',  low: 0, high: 35,   desc: 'Eierstöcke · nur für Frauen relevant' },
+    { key: 'CA 19-9',name: 'CA 19-9',unit: 'U/mL', low: 0, high: 37,   desc: 'Bauchspeicheldrüse, Darm' },
+    { key: 'AFP',    name: 'AFP',    unit: 'µg/L',  low: 0, high: 10,   desc: 'Leber, Hodenkrebs' },
+    { key: 'LDH',    name: 'LDH',   unit: 'U/L',   low: 0, high: 250,  desc: 'Allgemeiner Gewebeschaden' },
+  ];
+
+  let found = 0, auffaellig = 0;
+  const items = [];
+
+  for (const m of cancerMarkers) {
+    let val = null;
+    for (const cat of Object.values(labs)) {
+      const t = cat.find(x => x.key === m.key);
+      if (t) { val = t.value; break; }
+    }
+
+    if (val == null) {
+      items.push(`
+        <div class="lv-cancer-item">
+          <div class="lv-cancer-item-top">
+            <div class="lv-cancer-item-name">${m.name}</div>
+            <div class="lv-cancer-item-val" style="color:var(--muted)">—</div>
+          </div>
+          <div class="lv-cancer-item-ref">Ref: < ${m.high} ${m.unit}</div>
+          <div class="lv-cancer-item-desc">${m.desc}</div>
+        </div>`);
+      continue;
+    }
+
+    found++;
+    const fl = flagFor(val, m.low, m.high);
+    if (fl !== 'ok') auffaellig++;
+    const col = lvScoreColor(fl === 'ok' ? 100 : fl === 'warn' ? 65 : 30);
+    const statusTxt = fl === 'ok' ? '✅ OK' : fl === 'warn' ? '⚠️ Grenzwertig' : '🚨 Auffällig';
+
+    items.push(`
+      <div class="lv-cancer-item" style="border-color:${fl !== 'ok' ? 'rgba(251,113,133,.25)' : ''}">
+        <div class="lv-cancer-item-top">
+          <div class="lv-cancer-item-name">${m.name}</div>
+          <div class="lv-cancer-item-val" style="color:${col}">${val}</div>
+        </div>
+        <div class="lv-cancer-item-ref">Ref: < ${m.high} ${m.unit} · ${statusTxt}</div>
+        <div class="lv-cancer-item-desc">${m.desc}</div>
+      </div>`);
+  }
+
+  grid.innerHTML = items.join('');
+
+  if (badge) {
+    if (found === 0) {
+      badge.textContent = 'Keine Marker gemessen';
+      badge.className = 'lv-cancer-badge';
+    } else if (auffaellig > 0) {
+      badge.textContent = `${auffaellig} Marker auffällig`;
+      badge.className = 'lv-cancer-badge danger';
+    } else {
+      badge.textContent = 'Alle Marker unauffällig ✅';
+      badge.className = 'lv-cancer-badge';
+    }
+  }
+}
+
+// ── Verlaufsgraph rendern ────────────────────────────────────────
+function lvRenderTrends() {
+  const wrap = document.getElementById('lvTrendCards');
+  if (!wrap) return;
+
+  const hist = state?.customer?.history || [];
+  const trendKeys = [
+    { key: 'HbA1c',             unit: '%',      low: 4.0,  high: 5.6  },
+    { key: 'LDL',               unit: 'mmol/L', low: 0,    high: 3.0  },
+    { key: 'ApoB',              unit: 'g/L',    low: 0,    high: 1.0  },
+    { key: 'hs-CRP',            unit: 'mg/L',   low: 0,    high: 3.0  },
+    { key: 'Vitamin D (25-OH)', unit: 'nmol/L', low: 75,   high: 999  },
+    { key: 'Triglyceride',      unit: 'mmol/L', low: 0,    high: 1.7  },
+    { key: 'TSH',               unit: 'mIU/L',  low: 0.4,  high: 4.0  },
+    { key: 'Ferritin',          unit: 'µg/L',   low: 30,   high: 300  },
+  ];
+
+  const items = trendKeys.map(k => {
+    const vals = hist.map(h => h.values?.[k.key]).filter(v => v != null);
+    const last  = vals[vals.length - 1];
+    const prev  = vals[vals.length - 2];
+    const fl    = last != null ? flagFor(last, k.low, k.high) : null;
+    const col   = lvScoreColor(fl === 'ok' ? 100 : fl === 'warn' ? 65 : 30);
+
+    const trend = prev != null && last != null
+      ? (last > prev ? '↑ Steigend' : last < prev ? '↓ Sinkend' : '→ Stabil')
+      : '— Noch kein Verlauf';
+    const trendCol = trend.startsWith('↑')
+      ? (k.high < 999 ? '#fb7185' : '#34d399')
+      : trend.startsWith('↓')
+        ? (k.low > 0 ? '#34d399' : '#fbbf24')
+        : 'var(--muted)';
+
+    // SVG Sparkline
+    const svgW = 160, svgH = 36;
+    let sparkSVG = '';
+    if (vals.length >= 2) {
+      const minV = Math.min(...vals) * 0.9;
+      const maxV = Math.max(...vals) * 1.1;
+      const pts  = vals.map((v, i) => {
+        const x = (i / (vals.length - 1)) * svgW;
+        const y = svgH - ((v - minV) / (maxV - minV || 1)) * (svgH - 8) - 4;
+        return `${x},${y}`;
+      }).join(' ');
+      const strokeCol = fl === 'ok' ? '#34d399' : fl === 'warn' ? '#fbbf24' : '#fb7185';
+      sparkSVG = `
+        <polyline points="${pts}" fill="none" stroke="${strokeCol}"
+          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+      const lastPt = vals[vals.length - 1];
+      const lx = svgW;
+      const ly = svgH - ((lastPt - minV) / (maxV - minV || 1)) * (svgH - 8) - 4;
+      sparkSVG += `<circle cx="${lx}" cy="${ly}" r="4" fill="${strokeCol}"/>`;
+    }
+
+    const histDisplay = vals.length > 0
+      ? vals.map((v, i) => `<span>${v}</span>${i < vals.length - 1 ? '<span class="lv-trend-arrow">→</span>' : ''}`).join('')
+      : '<span>Noch keine Verlaufsdaten</span>';
+
+    return `
+      <div class="lv-trend-item">
+        <div class="lv-trend-top">
+          <div class="lv-trend-name">${k.key}</div>
+          <div>
+            <div class="lv-trend-val" style="color:${col}">${last ?? '—'}</div>
+            <div class="lv-trend-unit">${k.unit}</div>
+          </div>
+        </div>
+        <div class="lv-trend-history">${histDisplay}</div>
+        <svg class="lv-trend-svg" viewBox="0 0 ${svgW} ${svgH}" preserveAspectRatio="none">
+          ${sparkSVG || '<line x1="0" y1="18" x2="160" y2="18" stroke="rgba(148,163,184,.15)" stroke-width="1" stroke-dasharray="4"/>'}
+        </svg>
+        <div class="lv-trend-direction" style="color:${trendCol}">${trend}</div>
+      </div>`;
+  });
+
+  wrap.innerHTML = items.join('');
+}
+
+// ── Longevity Empfehlungen rendern ───────────────────────────────
+function lvRenderRecos() {
+  const grid = document.getElementById('lvRecoGrid');
+  if (!grid) return;
+
+  const { score } = lvCalcScore();
+  const pillars   = lvCalcPillars();
+
+  const recos = [];
+
+  if (pillars.inflamm != null && pillars.inflamm < 70)
+    recos.push({ icon: '🔥', cls: 'warn', title: 'Entzündung reduzieren', desc: 'Omega-3, Kurkuma, Schlaf optimieren, Zucker reduzieren.' });
+
+  if (pillars.heart != null && pillars.heart < 70)
+    recos.push({ icon: '🫀', cls: 'warn', title: 'Herzgesundheit verbessern', desc: 'LDL/ApoB senken, Ausdauersport, mediterrane Ernährung.' });
+
+  if (pillars.meta != null && pillars.meta < 70)
+    recos.push({ icon: '⚡', cls: 'warn', title: 'Stoffwechsel optimieren', desc: 'Blutzucker stabilisieren, Intervallfasten, weniger Kohlenhydrate.' });
+
+  if (pillars.nutr != null && pillars.nutr < 70)
+    recos.push({ icon: '🥦', cls: 'warn', title: 'Nährstoffversorgung', desc: 'Vitamin D, B12, Magnesium und Zink supplementieren.' });
+
+  if (pillars.hormone != null && pillars.hormone < 70)
+    recos.push({ icon: '🧠', cls: 'danger', title: 'Hormone abklären', desc: 'Cortisol, Testosteron und Schilddrüse ärztlich überprüfen lassen.' });
+
+  // Standard-Empfehlungen
+  recos.push({ icon: '💪', cls: 'good', title: 'Zone 2 Training', desc: '150 Min./Woche moderates Ausdauertraining für Longevity.' });
+  recos.push({ icon: '😴', cls: 'good', title: 'Schlaf optimieren', desc: '7-9 Stunden, konsistenter Rhythmus, kein Blaulicht vor dem Schlafen.' });
+  recos.push({ icon: '🧬', cls: 'good', title: 'Verlaufstest in 3 Monaten', desc: 'Optimale Frequenz für Longevity-Tracking: alle 3 Monate.' });
+
+  grid.innerHTML = recos.map(r => `
+    <div class="lv-reco-item">
+      <div class="lv-reco-icon ${r.cls}">${r.icon}</div>
+      <div class="lv-reco-text">
+        <div class="lv-reco-title">${r.title}</div>
+        <div class="lv-reco-desc">${r.desc}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Haupt-Render Longevity ───────────────────────────────────────
+function lvRender() {
+  lvRenderHero();
+  lvRenderCancer();
+  lvRenderTrends();
+  lvRenderRecos();
+}
+  </script>
 </body>
 </html>
