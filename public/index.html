@@ -945,6 +945,112 @@
     <!-- VIEW: STEP 4 -->
     <div class="view" id="view-step4">
       <div class="cards">
+        <!-- ================================================================
+     LUMENA HEALTH – LONGEVITY DASHBOARD EXTENSION
+     Einfügen: direkt AM ANFANG des bestehenden Step-4 Inhalts
+     (vor dem bestehenden Hausbesuch/KPI Block)
+     ================================================================ -->
+
+<!-- ① HERO: Biologisches Alter + Longevity Score -->
+<div class="lv-hero">
+  <div class="lv-bio-age-block">
+    <div class="lv-bio-label">🧬 Biologisches Alter</div>
+    <div class="lv-bio-number" id="lvBioAge">—</div>
+    <div class="lv-bio-sub" id="lvBioSub">wird berechnet…</div>
+    <div class="lv-bio-chips" id="lvBioChips"></div>
+  </div>
+
+  <div class="lv-score-block">
+    <div class="lv-score-ring-wrap">
+      <svg class="lv-ring-svg" viewBox="0 0 120 120">
+        <circle class="lv-ring-bg"   cx="60" cy="60" r="52" />
+        <circle class="lv-ring-fill" cx="60" cy="60" r="52" id="lvRingFill" />
+      </svg>
+      <div class="lv-ring-inner">
+        <div class="lv-ring-num"  id="lvScoreNum">—</div>
+        <div class="lv-ring-lbl">Longevity</div>
+      </div>
+    </div>
+    <div class="lv-score-info">
+      <div class="lv-score-title" id="lvScoreLabel">Score wird berechnet</div>
+      <div class="lv-score-sub">Basierend auf PhenoAge-Formel<br>aus deinen Blutwerten</div>
+    </div>
+  </div>
+
+  <div class="lv-pillars">
+    <div class="lv-pillar" id="lvPillarHeart">
+      <div class="lv-pillar-icon">🫀</div>
+      <div class="lv-pillar-bar-wrap"><div class="lv-pillar-bar" id="lvBarHeart"></div></div>
+      <div class="lv-pillar-name">Herz</div>
+      <div class="lv-pillar-score" id="lvScoreHeart">—</div>
+    </div>
+    <div class="lv-pillar" id="lvPillarMeta">
+      <div class="lv-pillar-icon">⚡</div>
+      <div class="lv-pillar-bar-wrap"><div class="lv-pillar-bar" id="lvBarMeta"></div></div>
+      <div class="lv-pillar-name">Stoffwechsel</div>
+      <div class="lv-pillar-score" id="lvScoreMeta">—</div>
+    </div>
+    <div class="lv-pillar" id="lvPillarInflamm">
+      <div class="lv-pillar-icon">🔥</div>
+      <div class="lv-pillar-bar-wrap"><div class="lv-pillar-bar" id="lvBarInflamm"></div></div>
+      <div class="lv-pillar-name">Entzündung</div>
+      <div class="lv-pillar-score" id="lvScoreInflamm">—</div>
+    </div>
+    <div class="lv-pillar" id="lvPillarOrgan">
+      <div class="lv-pillar-icon">🧪</div>
+      <div class="lv-pillar-bar-wrap"><div class="lv-pillar-bar" id="lvBarOrgan"></div></div>
+      <div class="lv-pillar-name">Organe</div>
+      <div class="lv-pillar-score" id="lvScoreOrgan">—</div>
+    </div>
+    <div class="lv-pillar" id="lvPillarNutr">
+      <div class="lv-pillar-icon">🥦</div>
+      <div class="lv-pillar-bar-wrap"><div class="lv-pillar-bar" id="lvBarNutr"></div></div>
+      <div class="lv-pillar-name">Nährstoffe</div>
+      <div class="lv-pillar-score" id="lvScoreNutr">—</div>
+    </div>
+    <div class="lv-pillar" id="lvPillarHormone">
+      <div class="lv-pillar-icon">🧠</div>
+      <div class="lv-pillar-bar-wrap"><div class="lv-pillar-bar" id="lvBarHormone"></div></div>
+      <div class="lv-pillar-name">Hormone</div>
+      <div class="lv-pillar-score" id="lvScoreHormone">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ② CANCER PRÄVENTION -->
+<div class="lv-cancer-card">
+  <div class="lv-cancer-header">
+    <div>
+      <div class="lv-section-title">🧬 Cancer Prävention</div>
+      <div class="lv-section-sub">Früherkennungs-Marker · Assistenz, keine Diagnose</div>
+    </div>
+    <div class="lv-cancer-badge" id="lvCancerBadge">wird geprüft…</div>
+  </div>
+  <div class="lv-cancer-grid" id="lvCancerGrid">
+    <!-- wird per JS gerendert -->
+  </div>
+  <div class="lv-cancer-disclaimer">
+    ⚠️ Tumormarker sind kein Screening-Tool. Auffällige Werte bitte ärztlich abklären.
+  </div>
+</div>
+
+<!-- ③ VERLAUFSGRAPH -->
+<div class="lv-trend-section">
+  <div class="lv-section-title">📈 Longevity Verlauf</div>
+  <div class="lv-section-sub">Deine Schlüsselwerte über mehrere Tests</div>
+  <div class="lv-trend-cards" id="lvTrendCards">
+    <!-- wird per JS gerendert -->
+  </div>
+</div>
+
+<!-- ④ LONGEVITY EMPFEHLUNGEN -->
+<div class="lv-reco-card">
+  <div class="lv-section-title">🎯 Longevity Empfehlungen</div>
+  <div class="lv-section-sub">Basierend auf deinen aktuellen Werten · KI-Assistenz</div>
+  <div class="lv-reco-grid" id="lvRecoGrid">
+    <!-- wird per JS gerendert -->
+  </div>
+</div>
         <div class="card full">
           <div class="card-header">
             <div>
