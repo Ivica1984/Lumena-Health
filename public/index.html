@@ -1833,6 +1833,9 @@
       t.classList.toggle('active', active);
       t.setAttribute('aria-selected', active ? 'true' : 'false');
     });
+    if (name === 'step4') {
+  if (typeof lvRender === 'function') lvRender();
+}
 
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     const view = document.getElementById(`view-${name}`);
